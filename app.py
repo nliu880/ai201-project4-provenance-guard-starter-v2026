@@ -225,12 +225,12 @@ def submit():
 
     return jsonify({
         "content_id": content_id, 
-        "creator_id": creator_id,
+        "creator_id": creator_id, 
         "guess": "unsure",
-        "confidence": model_score, # change this later
+        "confidence": None, # change this later, used to be model_score
         "label": "not built yet",
-        "model_score": model_score,
-        "style_score": None
+        "model_score": model_score, 
+        "style_score": None 
     }), 200
 
     # # TODO: delete this and build the route.
