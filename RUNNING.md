@@ -83,13 +83,15 @@ position.**
 
 ## The routes
 
-| Route | State | What it does |
-|---|---|---|
-| `POST /ping` | **works** | The example. Don't edit it |
-| `GET /health` | **works** | Is the service up, is the model loaded |
-| `GET /log` | **works** | The audit log, as JSON |
-| `POST /submit` | **you build it** | Milestones 3, 4, 5 |
-| `POST /appeal` | **you build it** | Milestone 5 |
+| Route | State | What it does | Example |
+|---|---|---|---|
+| `POST /ping` | **works** | The example. Don't edit it | `curl -X POST http://127.0.0.1:5000/ping -H "Content-Type: application/json" -d '{"message": "hello"}'` |
+| `GET /health` | **works** | Is the service up, is the model loaded | `curl -X GET http://127.0.0.1:5000/health` |
+| `GET /log` | **works** | The audit log, as JSON | `curl -X GET http://127.0.0.1:5000/log` |
+| `POST /submit` | **you build it** | Milestones 3, 4, 5 | `curl -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{"text": "some writing. ","creator_id": "me"}'` |
+| `POST /appeal` | **you build it** | Milestone 5 | `curl -X POST http://127.0.0.1:5000/appeal -H "Content-Type: application/json" -d '{"content_id": "...", "reasoning": "..."}'` |
+
+**Note:** `-d '{"message": "hello"}` can be replaced with `-d @file.json` if a file exists with the text in the correct format. See the `samples` folder for more text.
 
 ---
 

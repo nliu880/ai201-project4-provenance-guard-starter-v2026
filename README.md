@@ -133,11 +133,20 @@
 ```bash
 $ curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "...", "creator_id": "..."}'
+  -d '{"text": "I didn't sleep. Not properly, anyway — I lay there listening to the boiler tick and thinking about the thing I'd said to Marcus at the pub, which was stupid, and which he will absolutely bring up again. Twice now. So: coffee, and the long way round to work, and a plan. The plan lasted until about ten past nine, when Priya asked how the weekend was and I said \"fine\" in the voice that means it wasn't, and she put her mug down and looked at me. That's the trouble with Priya. She notices.",
+ "creator_id": "copy_from_demo"}
 ```
 
 ```json
-
+{
+  "confidence": null,
+  "content_id": "c_1b450e394709",
+  "creator_id": "copy_from_demo",
+  "guess": "unsure",
+  "label": "not built yet",
+  "model_score": 0.4445,
+  "style_score": null
+}
 ```
 
 **An appeal**
