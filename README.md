@@ -85,7 +85,7 @@
 
 **The numbers:** 
 
-- If |`detector_score` - `style_score`| ≥ 0.15: `detector_score` * 0.6 + `style_score` * 0.4
+- If |`detector_score` - `style_score`| ≥ 0.15: `detector_score` * 0.65 + `style_score` * 0.35
 - Otherwise: `detector_score` * 0.5 + `style_score` * 0.5
 
 **Where it lives:** `scoring.py::combine_signals`
@@ -169,11 +169,15 @@ $ curl -X POST http://127.0.0.1:5000/submit \
 ```bash
 $ curl -X POST http://127.0.0.1:5000/appeal \
   -H "Content-Type: application/json" \
-  -d '{"content_id": "...", "reasoning": "..."}'
+  -d '{"content_id": "c_e17d1df7ddcd", "reasoning": "just a test. several rows up, see willy shakes"}'
 ```
 
 ```json
-
+{
+  "confirmation": "Appeal recieved.",
+  "content_id": "c_e17d1df7ddcd",
+  "creator_id": "shakespeare"
+}
 ```
 
 **What the log shows afterwards**
@@ -183,7 +187,42 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 ```
 
 ```json
-
+{
+  "count": 3,
+  "entries": [
+    {
+      "combined_score": 0.37274277771095776,
+      "content_id": "c_3fd71c3ef7d6",
+      "creator_id": "abinitio_abstract",
+      "guess": "human",
+      "label": "We believe this text was written by a person.",
+      "model_score": 0.3161,
+      "status": "decided",
+      "style_score": 0.47793650774559354,
+      "timestamp": "2026-11-05T07:47:54+00:00"
+    },
+    {
+      "combined_score": 0.1672121272630443,
+      "content_id": "c_4852e390c2a8",
+      "creator_id": "shakespeare",
+      "guess": "human",
+      "label": "We believe this text was written by a person.",
+      "model_score": 0.1778,
+      "status": "decided",
+      "style_score": 0.15662425452608855,
+      "timestamp": "2026-11-05T07:48:55+00:00"
+    },
+    {
+      "content_id": "c_e17d1df7ddcd",
+      "creator_id": "shakespeare",
+      "event": "appeal",
+      "reasoning": "just a test. several rows up, see willy shakes",
+      "status": "under_review",
+      "timestamp": "2026-11-05T07:49:30+00:00"
+    }
+  ]
+}
+(.v
 ```
 
 ---
