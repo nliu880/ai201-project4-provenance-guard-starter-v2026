@@ -6,3 +6,4 @@
 {"timestamp": "2026-11-05T06:59:35+00:00", "content_id": "c_e1a18a724c80", "creator_id": "abinitio_abstract", "guess": null, "model_score": 0.3161, "style_score": 0.47793650774559354, "combined_score": 0.3808346030982374, "label": null, "status": "decided"}
 {"timestamp": "2026-11-05T07:00:03+00:00", "content_id": "c_470a08bc74c9", "creator_id": "demo_instructor", "guess": null, "model_score": 0.5813, "style_score": 0.6595471583165325, "combined_score": 0.6204235791582663, "label": null, "status": "decided"}
 {"timestamp": "2026-11-05T07:00:09+00:00", "content_id": "c_d133198d9516", "creator_id": "copy_from_demo", "guess": null, "model_score": 0.7544, "style_score": 0.648934499821189, "combined_score": 0.7016672499105945, "label": null, "status": "decided"}
+{"timestamp": "2026-11-05T07:40:05+00:00", "content_id": "c_e17d1df7ddcd", "creator_id": "shakespeare", "event": "appeal", "status": "under_review", "reasoning": "just a test. several rows up, see willy shakes"}

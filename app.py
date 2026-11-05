@@ -218,18 +218,17 @@ def submit():
     model_score = detector.model_signal(text)
     style_score = stylometry.style_signal(text)
     combined = scoring.combine_signals(model_score, style_score)
-    # guess = 
-    # label = 
+    guess, label = scoring.score_to_label(combined)
     # confidence = 
 
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
-        # guess=guess,
+        guess=guess,
         model_score=model_score,
         style_score=style_score,
         combined_score=combined,
-        # label=label,
+        label=label,
         status="decided",
         # confidence=confidence,
     )
@@ -237,19 +236,19 @@ def submit():
     return jsonify({
         "content_id": content_id, 
         "creator_id": creator_id, 
-        "guess": "not built yet", # TODO guess 
+        "guess": guess,
         "model_score": model_score, 
         "style_score": style_score,
         "combined_score": combined,
+        "label": label,
         "confidence": "not built yet", # TODO confidence
-        "label": "not built yet", # TODO label 
     }), 200
 
 
 @app.post("/appeal")
 def appeal():
     """
-    A writer says you got it wrong. ← TODO — Milestone 5
+    A writer says you got it wrong. 
 
     Expects JSON:
         {"content_id": "...", "reasoning": "..."}
@@ -267,13 +266,25 @@ def appeal():
     wrong accusation and nothing at all.
     """
     payload = request.get_json(silent=True) or {}
+    
+    content_id = payload.get("content_id", "unknown")
+    content = audit.entries_for(content_id)
+    
+    if len(content) == 0:
+        return jsonify({
+            "error": "bad_request", 
+            "message": "content_id does not exist."
+            }), 400
 
-    # TODO: delete this and build the route.
+    reasoning = payload.get("reasoning")
+    creator_id = content[0].get("creator_id")
+    audit.log_appeal(content_id, creator_id, reasoning)
+
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /appeal isn't built yet — see the TODO in app.py.",
-        "you_sent": payload,
-    }), 501
+        "content_id": content_id,
+        "creator_id": creator_id,
+        "confirmation": "Appeal recieved."
+    }), 200
 
 
 # ── Already works ─────────────────────────────────────────────────────────────
