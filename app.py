@@ -155,7 +155,6 @@ def health():
 def submit():
     """
     Take a piece of text, decide about it, log the decision, answer.
-    ← TODO — Milestones 3, 4 and 5
 
     Expects JSON:
         {"text": "...", "creator_id": "..."}
@@ -201,47 +200,50 @@ def submit():
     """
 
     import detector
+    import stylometry
+    import scoring
 
     payload = request.get_json(silent=True) or {}
     text = payload.get("text")
-    creator_id = payload.get("creator_id", "unknown")
-
-    model_score = detector.model_signal(text)
 
     if not isinstance(text, str) or not text.strip():
         return jsonify({
             "error": "bad_request", 
             "message": "Send JSON with a non-empty \"text\"."
             }), 400
-
+    
     content_id = f"c_{uuid.uuid4().hex[:12]}"
+    creator_id = payload.get("creator_id", "unknown")
+
+    model_score = detector.model_signal(text)
+    style_score = stylometry.style_signal(text)
+    combined = scoring.combine_signals(model_score, style_score)
+    # guess = 
+    # label = 
+    # confidence = 
 
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
+        # guess=guess,
         model_score=model_score,
+        style_score=style_score,
+        combined_score=combined,
+        # label=label,
         status="decided",
+        # confidence=confidence,
     )
 
     return jsonify({
         "content_id": content_id, 
         "creator_id": creator_id, 
-        "guess": "unsure",
-        "confidence": None, # change this later, used to be model_score
-        "label": "not built yet",
+        "guess": "not built yet", # TODO guess 
         "model_score": model_score, 
-        "style_score": None 
+        "style_score": style_score,
+        "combined_score": combined,
+        "confidence": "not built yet", # TODO confidence
+        "label": "not built yet", # TODO label 
     }), 200
-
-    # # TODO: delete this and build the route.
-    # return jsonify({
-    #     "error": "not_implemented",
-    #     "message": "POST /submit isn't built yet — see the TODO in app.py.",
-    #     "you_sent": {
-    #         "text_length": len(payload.get("text", "")),
-    #         "creator_id": payload.get("creator_id"),
-    #     },
-    # }), 501
 
 
 @app.post("/appeal")

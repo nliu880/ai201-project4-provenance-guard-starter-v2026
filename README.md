@@ -81,9 +81,12 @@
 <!-- Write the rule in words, then give the numbers. What happens when the two
      signals disagree? -->
 
-**The rule:**
+**The rule:** If the style scores differ by more than 0.15, then a weighted average will be used, with more weight given to the detector score. Otherwise, use the mean.
 
-**The numbers:**
+**The numbers:** 
+
+- If |`detector_score` - `style_score`| ≥ 0.15: `detector_score` * 0.6 + `style_score` * 0.4
+- Otherwise: `detector_score` * 0.5 + `style_score` * 0.5
 
 **Where it lives:** `scoring.py::combine_signals`
 
@@ -92,7 +95,18 @@
 
 **A case where my two signals split, and what my rule does with it:**
 
+The below JSON output is for formal human text taken from the abstract of a scientific paper. There is a really large gap between the two signals. Formal human writing can have similar styles to AI generated text, following conventional rules of grammar and style. In these cases, the `detector_score` will take heavier weight. 
 
+```json
+{
+  "confidence": null,
+  "content_id": "c_fbf07cd20581",
+  "creator_id": "abinitio_abstract",
+  "guess": "unsure",
+  "label": "not built yet",
+  "model_score": 0.3161,
+  "style_score": 0.47793650774559354
+}```
 
 ---
 

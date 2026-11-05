@@ -49,7 +49,7 @@ def words(text: str) -> list[str]:
 
 def sentence_length_spread(text: str) -> float:
     """
-    How much sentence length varies. ← TODO
+    How much sentence length varies. 
 
     Returns:
         A float. Decide yourself what scale it's on and which direction means
@@ -64,13 +64,15 @@ def sentence_length_spread(text: str) -> float:
     `stdev` raises on fewer than two values. Decide what that should return
     before the attack set decides for you.
     """
-    # TODO: replace this
-    return 0.0
+    sntncs = sentences(text)
+    lengths = [len(words(sentence)) for sentence in sntncs]
+    mean = statistics.mean(lengths)
+    return statistics.stdev(lengths, mean)
 
 
 def type_token_ratio(text: str) -> float:
     """
-    Unique words over total words. ← TODO
+    Unique words over total words. 
 
     Returns:
         A float between 0 and 1. Higher means more varied vocabulary.
@@ -80,13 +82,14 @@ def type_token_ratio(text: str) -> float:
     directly comparable on it, and if your test inputs vary a lot in length,
     that alone can look like a signal.
     """
-    # TODO: replace this
-    return 0.0
+    word_lst = words(text)
+    word_set = set(word_lst)
+    return len(word_set) / len(word_lst)
 
 
 def punctuation_density(text: str) -> float:
     """
-    How much punctuation, relative to length. ← TODO
+    How much punctuation, relative to length.
 
     Returns:
         A float. Whether you count all punctuation or only some kinds — commas,
@@ -94,15 +97,16 @@ def punctuation_density(text: str) -> float:
         more interesting than full stops, because they vary more between
         writers.
     """
-    # TODO: replace this
-    return 0.0
+    all_punc = len(re.findall(r"[,\.?\'\";:\-–\/\(\)\!]", text))
+    word_count = len(words(text))
+    return all_punc / word_count
 
 
 # ── Combining them ───────────────────────────────────────────────────────────
 
 def style_signal(text: str) -> float:
     """
-    The style signal as a 0–1 score. **Higher means more likely AI.** ← TODO
+    The style signal as a 0–1 score. **Higher means more likely AI.** 
 
     Combine your three measures into one number. Same direction as
     `detector.model_signal`, so that `scoring.combine_signals` can treat them
@@ -122,8 +126,11 @@ def style_signal(text: str) -> float:
     you trust it. Plain and ordinary, not formal: formal prose reads as *human*
     to signal one, and it is plain writing that gets accused.
     """
-    # TODO: replace this
-    return 0.5
+    spread = sentence_length_spread(text) # lower for AI, can be greater than 1
+    ratio = type_token_ratio(text) # lower for AI, caps out at 1
+    density = punctuation_density(text) # lower for AI, can be greater than 1
+
+    return (1 - spread / 20) * 0.7 + ratio * 0.1 + density * 0.2
 
 
 if __name__ == "__main__":
