@@ -36,6 +36,8 @@
 
 ## What This Does
 
+This project takes a text submission through an API request in JSON format and judges to see if it was generated using AI or written by a person. The decision is made through a combination of LLM usage and style features, such as sentence length and vocabulary breadth. The decision is returned in JSON format with additional information, such as a `content_id`, and is also saved to an audit log. Users may choose to appeal the decision through another request using the previously generated `content_id`, where it be noted in the audit log.
+
 <!-- The path a submission takes, from arriving to the label a reader sees.
      Six or seven steps — this is the trace you wrote in Milestone 1. -->
 
@@ -231,15 +233,15 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I didn't use AI this unit.
+- *What came back:* N/A
+- *What I changed:* N/A
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I didn't use AI this unit.
+- *What came back:* N/A
+- *What I changed:* N/A
 
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
