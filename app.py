@@ -230,7 +230,7 @@ def submit():
         combined_score=combined,
         label=label,
         status="decided",
-        # confidence=confidence,
+        confidence=combined,
     )
 
     return jsonify({
@@ -241,7 +241,7 @@ def submit():
         "style_score": style_score,
         "combined_score": combined,
         "label": label,
-        "confidence": "not built yet", # TODO confidence
+        "confidence": combined, # TODO confidence
     }), 200
 
 
