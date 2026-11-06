@@ -46,7 +46,7 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. It must name a number. -->
 
-Only 1 in 10 writing samples may be a false positive.
+Only 1 in 10 of my test samples may be a false positive.
 
 **Why this target:**
 
@@ -82,7 +82,7 @@ The model/decision making must be able to reach each label at least once, indica
 
 <!-- Your criterion. -->
 
-Every might-be/might-not-be text is labeled correctly as such. 
+Every piece of text where it is unclear if it is AI generated or written by a human is labeled correctly as such (`unsure`). 
 
 **Why this target:**
 
