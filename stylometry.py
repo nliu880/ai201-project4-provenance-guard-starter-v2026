@@ -66,8 +66,11 @@ def sentence_length_spread(text: str) -> float:
     """
     sntncs = sentences(text)
     lengths = [len(words(sentence)) for sentence in sntncs]
-    mean = statistics.mean(lengths)
-    return statistics.stdev(lengths, mean)
+
+    if len(lengths) > 1:
+        return statistics.stdev(lengths, statistics.mean(lengths))
+    else:
+        return 0
 
 
 def type_token_ratio(text: str) -> float:
