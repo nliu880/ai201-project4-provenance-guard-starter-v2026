@@ -219,7 +219,6 @@ def submit():
     style_score = stylometry.style_signal(text)
     combined = scoring.combine_signals(model_score, style_score)
     guess, label = scoring.score_to_label(combined)
-    # confidence = 
 
     audit.log_decision(
         content_id=content_id,
