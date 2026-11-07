@@ -257,9 +257,13 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
      thresholds. Your numbers have to be liveable for the first and hostile to
      the second. -->
 
+     A real writer should submit their work once, and then depending on the result, edit it before making another submission. Even if the writer is just spam submitting to see if the system is functioning or if its lagging, they still would not be submitting too many times a minute, hence the limit of 5.
+
+     Similarly, a writer can only spend so many hours a day editing their work between attempts or submitting different pieces. In the first situation, true editing/rewriting and then resubmitting should take up far fewer than 50 attempts. In the second scenario, a writer wouldn't be able to produce 50 pieces of writing a day, unless they are using AI, in which case the model classifier is a moot point.
+
 **What a caller counts as:** <!-- per address, or per creator_id? They fail
 differently — one script can look like a thousand callers, and one household
-can look like one. -->
+can look like one. --> Callers are counted by `creator_id`.
 
 **The run of status codes when I pushed past it:**
 
@@ -298,7 +302,64 @@ The first one is slow while the model loads.
 <!-- Every attack with its outcome and a held-or-broke mark.
      `run_attacks.py --label before` produces the table. -->
 
-
+| ID | Family | Targeting | Status | Content ID | Guess | Score | Verdict |
+|---|---|---|---|---|---|---|---|
+| EV01 | evasion | signal two: typos raise word variety | 200 | `c_fda5dcc93e2b` | human | 0.367 | BROKE |
+| EV02 | evasion | signal two: broken-up sentences raise length spread | 200 | `c_c9603cc83e65` | unsure | 0.600 | HELD |
+| EV03 | evasion | signal two: a pasted quotation changes the shape | 200 | `c_d850204f509a` | ai | 0.669 | HELD |
+| EV04 | evasion | signal one: unusual words raise perplexity | 200 | `c_290a593d89d6` | ai | 0.676 | HELD |
+| EV05 | evasion | both signals: heavy human editing pass | 200 | `c_b26347ba2572` | unsure | 0.395 | HELD |
+| EV06 | evasion | signal two: one very long sentence and one very short | 200 | `c_7e07722db274` | unsure | 0.427 | HELD |
+| EV07 | evasion | signal two: padding with punctuation | 200 | `c_514cf588e69e` | ai | 0.669 | HELD |
+| EV08 | evasion | signal one: text below the token window | 200 | `c_4431d826995c` | unsure | 0.436 | HELD |
+| EV09 | evasion | both: AI text with a human opening paragraph bolted on | 200 | `c_f581f4c3d280` | ai | 0.661 | HELD |
+| EV10 | evasion | signal two: repeated stanza structure | 200 | `c_2efec84b26b7` | ai | 0.801 | HELD |
+| FP01 | false_positive | plain, clear human writing with no flourishes | 200 | `c_e780a6c519be` | unsure | 0.601 | BROKE |
+| FP02 | false_positive | human writing in a formal register | 200 | `c_9f80b9ae6aa4` | ai | 0.720 | BROKE |
+| FP03 | false_positive | a non-native English speaker writing carefully | 200 | `c_94c2e24e72be` | ai | 0.752 | BROKE |
+| FP04 | false_positive | a student essay written to a rubric | 200 | `c_ef147cf055f1` | ai | 0.766 | BROKE |
+| FP05 | false_positive | technical documentation written by a person | 200 | `c_3909e1fe9e98` | ai | 0.744 | BROKE |
+| FP06 | false_positive | a person imitating a formal template | 200 | `c_3d70d2607973` | ai | 0.783 | BROKE |
+| FP07 | false_positive | human writing that repeats a phrase deliberately | 200 | `c_c30fc705e70b` | ai | 0.769 | BROKE |
+| FP08 | false_positive | very short genuine human submission | 200 | `c_475fc90004c7` | unsure | 0.502 | BROKE |
+| PI01 | prompt_injection | instruction to ignore the check | 200 | `c_e7deccbcb1b8` | unsure | 0.525 | HELD |
+| PI02 | prompt_injection | instruction disguised as a system message | 200 | `c_f930835c2d35` | human | 0.364 | BROKE |
+| PI03 | prompt_injection | instruction wrapped in the writer's voice | 200 | `c_75096b0b3049` | unsure | 0.623 | HELD |
+| PI04 | prompt_injection | attempt to make the label text hostile | 200 | `c_7af6f39f0608` | unsure | 0.553 | HELD |
+| PI05 | prompt_injection | attempt to inject into the audit log | 200 | `c_ba06d3e8484d` | ai | 0.658 | HELD |
+| PI06 | prompt_injection | instruction plus real human text | 200 | `c_9e90c5dd716e` | unsure | 0.576 | HELD |
+| MF01 | malformed | text is only whitespace | 400 | `—` | — | — | HELD |
+| MF02 | malformed | text is a single character | 500 | `—` | — | — | BROKE |
+| MF03 | malformed | text is control characters | 200 | `c_dbc2a29da8d1` | human | 0.280 | BROKE |
+| MF04 | malformed | text is only punctuation | 500 | `—` | — | — | BROKE |
+| MF05 | malformed | text is a very long single word | 200 | `c_237716cfd88f` | ai | 0.928 | HELD |
+| MF06 | malformed | text is emoji only | 500 | `—` | — | — | BROKE |
+| MF07 | malformed | text is right-to-left script | 500 | `—` | — | — | BROKE |
+| MF08 | malformed | text is 60,000 characters | 200 | `c_9b214837cefd` | ai | 0.826 | HELD |
+| RQ01 | malformed | no text field at all | 400 | `—` | — | — | HELD |
+| RQ02 | malformed | no creator_id | 200 | `c_af0b2ae5eb21` | unsure | 0.442 | HELD |
+| RQ03 | malformed | text is a number | 400 | `—` | — | — | HELD |
+| RQ04 | malformed | text is a list | 400 | `—` | — | — | HELD |
+| RQ05 | malformed | text is null | 400 | `—` | — | — | HELD |
+| RQ06 | malformed | creator_id is an object | 200 | `c_5dec828854bc` | human | 0.335 | HELD |
+| RQ07 | malformed | body is a JSON array, not an object | 500 | `—` | — | — | BROKE |
+| RQ08 | malformed | body is unparseable JSON | 400 | `—` | — | — | HELD |
+| RQ09 | malformed | body is empty | 400 | `—` | — | — | HELD |
+| RQ10 | malformed | body is form-encoded, not JSON | 429 | `—` | — | — | BROKE |
+| RQ11 | malformed | body is JSON claiming to be plain text | 429 | `—` | — | — | BROKE |
+| RQ12 | malformed | deeply nested JSON | 400 | `—` | — | — | HELD |
+| FL01_01 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_8a517b30f566` | human | 0.306 | HELD |
+| FL01_02 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_33d87441d8fe` | human | 0.306 | HELD |
+| FL01_03 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_10f13e55df63` | human | 0.306 | HELD |
+| FL01_04 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_d3c90902a95a` | human | 0.306 | HELD |
+| FL01_05 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_59a0e37c1248` | human | 0.306 | HELD |
+| FL01_06 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_07 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_08 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_09 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_10 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_11 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_12 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
 
 **Ten audit log entries from the run**
 
@@ -515,7 +576,6 @@ that produced it: Produced by `python run_eval.py --label before`, copied from `
   }
 ]
 ```
-
 
 **Diagnoses**
 
