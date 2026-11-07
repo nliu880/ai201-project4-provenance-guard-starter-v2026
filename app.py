@@ -218,6 +218,7 @@ def submit():
     model_score = detector.model_signal(text)
     style_score = stylometry.style_signal(text)
     combined = scoring.combine_signals(model_score, style_score)
+    confidence = 1 - abs(model_score - style_score) / max(model_score, style_score)
     guess, label = scoring.score_to_label(combined)
 
     audit.log_decision(
@@ -229,7 +230,7 @@ def submit():
         combined_score=combined,
         label=label,
         status="decided",
-        confidence=combined,
+        confidence=confidence,
     )
 
     return jsonify({
