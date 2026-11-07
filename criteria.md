@@ -50,7 +50,7 @@ Only 1 in 10 of my test samples may be a false positive.
 
 **Why this target:**
 
-Being falsely accused of not writing your own work is the most harmful thing that can happen to a writer in this system. I only allow one false positive for truly in the middle cases. 
+Being falsely accused of not writing your own work is the most harmful thing that can happen to a writer in this system. I only allow one false positive for truly in the middle cases. Test samples comprise of either my own writing done without the useage of AI, other's writing which was published before the advent of AI, and AI generated test samples to test for true positives.
 
 ---
 
