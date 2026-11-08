@@ -31,6 +31,8 @@ from flask import Flask, jsonify, request
 import audit
 import config
 
+import regex as re
+
 app = Flask(__name__)
 
 
@@ -204,16 +206,46 @@ def submit():
     import scoring
 
     payload = request.get_json(silent=True) or {}
-    text = payload.get("text")
+    text = payload.get("text") or {}
 
-    if not isinstance(text, str) or not text.strip():
+    if not isinstance(text, str) or not text.strip(): # empty json
         return jsonify({
             "error": "bad_request", 
-            "message": "Send JSON with a non-empty \"text\"."
+            "message": 'Send properly formatted JSON with a non-empty "text" and "creator_id".'
+            }), 400
+
+    error_msg = jsonify({
+            "error": "bad_request", 
+            "message": "This model currently only supports English words and letters. Please do not use other languages or type in only punctuation or numbers."
+            }), 400
+    
+    text = re.sub(r"\n", " ", text)
+    
+    if re.search(r"[[:cntrl:]]", text): # control characters
+        print('control chars')
+        return error_msg
+    elif len(re.findall(r"\p{P}| |\d|\p{Emoji}", text)) == len(text): # all punctuation or all digits all emoji or some weird combo of that
+        print('all punc or emoji or digits')
+        return error_msg
+    elif len(re.findall(r"[^a-zA-Z\s\d\p{P}\n=<>]", text)) > 0: # not english
+        print('not english?')
+        return error_msg
+
+    if len(stylometry.words(text)) < 2 or len(stylometry.words(text)) >= 750: # too short or too long
+        return jsonify({
+            "error": "bad_request", 
+            "message": "Text is either too short or too long (one word or over 750 words)."
             }), 400
     
     content_id = f"c_{uuid.uuid4().hex[:12]}"
-    creator_id = payload.get("creator_id", "unknown")
+    print('snag creator is')
+    creator_id = payload.get("creator_id") or None
+
+    if not isinstance(creator_id, str):
+        return jsonify({
+            "error": "bad_request", 
+            "message": "Please include a creator_id as plain text."
+            }), 400
 
     model_score = detector.model_signal(text)
     style_score = stylometry.style_signal(text)

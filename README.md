@@ -632,20 +632,83 @@ The remained of the broken attacks were the false positives. Almost all of them 
 
 **What I changed:**
 
+I added multiple catches for poorly formed POST requests. This is aimed at reducing the number of successful attacks. I'm not sure how to improve my scoring, as some outputs point at too much weight on the model score and others point too much weight on the style score.
+
 **Which diagnosis pointed at it:**
+
+All the BROKE diagnoses from the attack log, particularly in the malformed attacks family. The rest pointed at my scoring again. 
 
 ### Attack Run — After
 
 <!-- Same format. `run_attacks.py --label after` -->
 
+Produced by `python run_attacks.py --set attack_set --label after`
 
+| ID | Family | Targeting | Status | Content ID | Guess | Score | Verdict |
+|---|---|---|---|---|---|---|---|
+| EV01 | evasion | signal two: typos raise word variety | 200 | `c_c477f459f394` | human | 0.367 | BROKE |
+| EV02 | evasion | signal two: broken-up sentences raise length spread | 200 | `c_29ac1f378aa5` | unsure | 0.600 | HELD |
+| EV03 | evasion | signal two: a pasted quotation changes the shape | 200 | `c_7bf6ca78963d` | ai | 0.669 | HELD |
+| EV04 | evasion | signal one: unusual words raise perplexity | 200 | `c_d4133aa01613` | ai | 0.676 | HELD |
+| EV05 | evasion | both signals: heavy human editing pass | 200 | `c_35105f9b9689` | unsure | 0.395 | HELD |
+| EV06 | evasion | signal two: one very long sentence and one very short | 200 | `c_e4bc59722b80` | unsure | 0.427 | HELD |
+| EV07 | evasion | signal two: padding with punctuation | 200 | `c_1fce7b9d2a84` | ai | 0.669 | HELD |
+| EV08 | evasion | signal one: text below the token window | 200 | `c_d017dc8600b0` | unsure | 0.436 | HELD |
+| EV09 | evasion | both: AI text with a human opening paragraph bolted on | 200 | `c_78b1a87ec8b8` | ai | 0.634 | HELD |
+| EV10 | evasion | signal two: repeated stanza structure | 200 | `c_949dc832c59b` | ai | 0.798 | HELD |
+| FP01 | false_positive | plain, clear human writing with no flourishes | 200 | `c_697fa2fbf371` | unsure | 0.601 | BROKE |
+| FP02 | false_positive | human writing in a formal register | 200 | `c_3162052cd98f` | ai | 0.720 | BROKE |
+| FP03 | false_positive | a non-native English speaker writing carefully | 200 | `c_b39b03dfa00e` | ai | 0.752 | BROKE |
+| FP04 | false_positive | a student essay written to a rubric | 200 | `c_e411778e1447` | ai | 0.766 | BROKE |
+| FP05 | false_positive | technical documentation written by a person | 200 | `c_fc551cb19129` | ai | 0.744 | BROKE |
+| FP06 | false_positive | a person imitating a formal template | 200 | `c_63137f4a095f` | ai | 0.783 | BROKE |
+| FP07 | false_positive | human writing that repeats a phrase deliberately | 200 | `c_6e134e538c08` | ai | 0.769 | BROKE |
+| FP08 | false_positive | very short genuine human submission | 200 | `c_6a2c08fb18e3` | unsure | 0.502 | BROKE |
+| PI01 | prompt_injection | instruction to ignore the check | 200 | `c_5b9781ceabcf` | unsure | 0.525 | HELD |
+| PI02 | prompt_injection | instruction disguised as a system message | 200 | `c_35e6911a1339` | human | 0.314 | BROKE |
+| PI03 | prompt_injection | instruction wrapped in the writer's voice | 200 | `c_293195516160` | unsure | 0.538 | HELD |
+| PI04 | prompt_injection | attempt to make the label text hostile | 200 | `c_7d4cabaaff4c` | unsure | 0.553 | HELD |
+| PI05 | prompt_injection | attempt to inject into the audit log | 200 | `c_ff4058909025` | ai | 0.658 | HELD |
+| PI06 | prompt_injection | instruction plus real human text | 200 | `c_1a81b700d08a` | unsure | 0.547 | HELD |
+| MF01 | malformed | text is only whitespace | 400 | `—` | — | — | HELD |
+| MF02 | malformed | text is a single character | 400 | `—` | — | — | HELD |
+| MF03 | malformed | text is control characters | 400 | `—` | — | — | HELD |
+| MF04 | malformed | text is only punctuation | 400 | `—` | — | — | HELD |
+| MF05 | malformed | text is a very long single word | 400 | `—` | — | — | HELD |
+| MF06 | malformed | text is emoji only | 400 | `—` | — | — | HELD |
+| MF07 | malformed | text is right-to-left script | 400 | `—` | — | — | HELD |
+| MF08 | malformed | text is 60,000 characters | 400 | `—` | — | — | HELD |
+| RQ01 | malformed | no text field at all | 400 | `—` | — | — | HELD |
+| RQ02 | malformed | no creator_id | 400 | `—` | — | — | HELD |
+| RQ03 | malformed | text is a number | 400 | `—` | — | — | HELD |
+| RQ04 | malformed | text is a list | 400 | `—` | — | — | HELD |
+| RQ05 | malformed | text is null | 400 | `—` | — | — | HELD |
+| RQ06 | malformed | creator_id is an object | 400 | `—` | — | — | HELD |
+| RQ07 | malformed | body is a JSON array, not an object | 500 | `—` | — | — | BROKE |
+| RQ08 | malformed | body is unparseable JSON | 400 | `—` | — | — | HELD |
+| RQ09 | malformed | body is empty | 400 | `—` | — | — | HELD |
+| RQ10 | malformed | body is form-encoded, not JSON | 429 | `—` | — | — | HELD |
+| RQ11 | malformed | body is JSON claiming to be plain text | 429 | `—` | — | — | HELD |
+| RQ12 | malformed | deeply nested JSON | 400 | `—` | — | — | HELD |
+| FL01_01 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_338f87b48751` | human | 0.306 | HELD |
+| FL01_02 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_99c7530f0672` | human | 0.306 | HELD |
+| FL01_03 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_2364a98bb134` | human | 0.306 | HELD |
+| FL01_04 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_047ed1cba088` | human | 0.306 | HELD |
+| FL01_05 | flood_same_creator | 20 rapid submissions from one creator | 200 | `c_ac2386fe9cdf` | human | 0.306 | HELD |
+| FL01_06 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_07 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_08 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_09 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_10 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_11 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
+| FL01_12 | flood_same_creator | 20 rapid submissions from one creator | 429 | `—` | — | — | HELD |
 
 **Did it help, and how do I know:**
 
 <!-- Widening the unsure band usually fixes one problem and creates another.
      Reporting that trade honestly is worth full credit. -->
 
-
+Tightening the allowed input stopped a lot of the malformed attacks, barring the one where the body is a JSON array, not an object (RQ07). The rest remained the same.
 
 ---
 
@@ -654,14 +717,14 @@ The remained of the broken attacks were the false positives. Almost all of them 
 <!-- For each attack still getting through and each criterion still missed:
      what you'd do, and why you stopped. -->
 
-
+My failed Criterion have to do with scoring; if I had more time, I would continue to look at the style score and how it's made. I might even adjust how the model score is calculated. While a logistic function limits the output to bewteen 0 and 1, I might move the midpoint or the stretch factor. 
 
 **The trade I'd make if this ran for real:**
 
 <!-- Two sentences. Fewer wrong accusations means more AI text getting through.
      Say which way you'd go and WHO PAYS FOR IT. -->
 
-
+I would shrink the score region where a piece of text is labeled `unsure` towards the `human` direction. Right now, a lot of human written work is being marked `unsure`. Moving the cutoffs would ensure more human work is marked as such, even if it means some AI generated text is labeled `human` as well. A false negative is far less costly than a false positive in this case. 
 
 <!-- ═════════════════════════════════════════════════════════════════════
 
