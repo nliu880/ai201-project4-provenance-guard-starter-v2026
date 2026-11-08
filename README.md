@@ -593,6 +593,37 @@ that produced it: Produced by `python run_eval.py --label before`, copied from `
 
      Look for a pattern. Five failures on one signal is one problem, not five. -->
 
+Criterion 3 and 4 are aiming for true positives. In the trials for Criterion 3, everything was labeled `unsure`, when only one should have. Neither the model score or the style score weigh heavily in either direction for the text samples that should have been labeled `ai` or `human`. As a result, I'm unsure where exactly the error is; my best guess is that it lies in either the model or style score, leaning towards style score as the model score shows more variation across text samples.
+
+In Criterion 4, all text samples should have been marked `unsure`, them being AI generated text that I edited and rephrased. One was marked `ai`. The model score was almost double the style score. In this case, I believe it was the combining of the two scores that was the issue, that the weight was too heavy towards the model score. 
+
+As for the broken attacks, many of them come from formatting issues/the route allowing data types when it should not (the `malformed` family of attacks). More stringent checks at the beginning of the route will these. EV01 and PI02 both should have been `unsure` at the minimum, and had low model scores and high style scores. I had weighted the combined score in favor of the model score, but this tells me I had perhaps weighted it too much in favor.
+
+The remained of the broken attacks were the false positives. Almost all of them were marked `ai`. The model scores were all fairly consistent with the style score, except for the last one, which ended up being marked `unsure`. This is with my current combined score weighted in favor of the model score. As the model score is mostly set (unless I want to remap perplexity onto a 0-1 scale, which I don't), the overall message for me is that something is up with my style score. While I could look into retweaking my score combination method, tweaking it one way helps EV01 and PI02, but would hurt FP08. 
+
+**NOTES:** Any prompt injection or evasion attacks that ended with an `unsure` or `ai` label were considered unsuccessful and marked HELD. 
+
+| ID | Family | Targeting | Status | Content ID | Guess | Score | Verdict |
+|---|---|---|---|---|---|---|---|
+| EV01 | evasion | signal two: typos raise word variety | 200 | `c_fda5dcc93e2b` | human | 0.367 | BROKE |
+| FP01 | false_positive | plain, clear human writing with no flourishes | 200 | `c_e780a6c519be` | unsure | 0.601 | BROKE |
+| FP02 | false_positive | human writing in a formal register | 200 | `c_9f80b9ae6aa4` | ai | 0.720 | BROKE |
+| FP03 | false_positive | a non-native English speaker writing carefully | 200 | `c_94c2e24e72be` | ai | 0.752 | BROKE |
+| FP04 | false_positive | a student essay written to a rubric | 200 | `c_ef147cf055f1` | ai | 0.766 | BROKE |
+| FP05 | false_positive | technical documentation written by a person | 200 | `c_3909e1fe9e98` | ai | 0.744 | BROKE |
+| FP06 | false_positive | a person imitating a formal template | 200 | `c_3d70d2607973` | ai | 0.783 | BROKE |
+| FP07 | false_positive | human writing that repeats a phrase deliberately | 200 | `c_c30fc705e70b` | ai | 0.769 | BROKE |
+| FP08 | false_positive | very short genuine human submission | 200 | `c_475fc90004c7` | unsure | 0.502 | BROKE |
+| PI02 | prompt_injection | instruction disguised as a system message | 200 | `c_f930835c2d35` | human | 0.364 | BROKE |
+| MF02 | malformed | text is a single character | 500 | `—` | — | — | BROKE |
+| MF03 | malformed | text is control characters | 200 | `c_dbc2a29da8d1` | human | 0.280 | BROKE |
+| MF04 | malformed | text is only punctuation | 500 | `—` | — | — | BROKE |
+| MF06 | malformed | text is emoji only | 500 | `—` | — | — | BROKE |
+| MF07 | malformed | text is right-to-left script | 500 | `—` | — | — | BROKE |
+| RQ07 | malformed | body is a JSON array, not an object | 500 | `—` | — | — | BROKE |
+| RQ10 | malformed | body is form-encoded, not JSON | 429 | `—` | — | — | BROKE |
+| RQ11 | malformed | body is JSON claiming to be plain text | 429 | `—` | — | — | BROKE |
+
 
 
 ---
