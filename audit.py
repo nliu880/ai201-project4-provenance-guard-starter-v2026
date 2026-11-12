@@ -73,7 +73,7 @@ def log_decision(
     return _append(entry)
 
 
-def log_appeal(content_id: str, creator_id: str, reasoning: str) -> dict:
+def log_appeal(content_id: str, creator_id: str, reasoning: str, appeal_id: str) -> dict:
     """
     Record an appeal beside the original decision.
 
@@ -89,6 +89,30 @@ def log_appeal(content_id: str, creator_id: str, reasoning: str) -> dict:
         "event": "appeal",
         "status": "under_review",
         "reasoning": reasoning,
+        "appeal_id": appeal_id,
+    })
+
+
+def log_appealed_decision(content_id: str, appeal_id: str, verdict: str, decision: str, notes: str | None = None, status = "final decision") -> dict:
+    """
+    Record a decision after an appeal.
+
+    verdict: overturned, upheld
+    decision: human, ai
+
+    This doesn't overwrite anything. The log is append-only, so the original
+    decision and appeal stay exactly where they were and the decision sits after it. 
+    Someone reading it later can see what was decided, that it was challenged, and 
+    what the final decision was in what order.
+    """
+    return _append({
+        "timestamp": _now(),
+        "content_id": content_id,
+        "appeal_id": appeal_id,
+        "verdict": verdict,
+        "decision": decision,
+        "notes": notes,
+        "status": status,
     })
 
 
@@ -152,6 +176,10 @@ def clear() -> int:
     return count
 
 
-def entries_for(content_id: str) -> list[dict]:
+def entries_for(id: str, appeal: bool | None = None) -> list[dict]:
     """Every entry touching one content id, in order."""
-    return [e for e in read_entries() if e.get("content_id") == content_id]
+
+    if appeal:
+        return [e for e in read_entries() if e.get("appeal_id") == id]
+        
+    return [e for e in read_entries() if e.get("content_id") == id]

@@ -32,6 +32,7 @@ import audit
 import config
 
 import regex as re
+from datetime import datetime, timezone
 
 app = Flask(__name__)
 
@@ -153,7 +154,7 @@ def health():
 # ── YOU BUILD THIS ────────────────────────────────────────────────────────────
 
 @app.post("/submit")
-@limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
+# @limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
 def submit():
     """
     Take a piece of text, decide about it, log the decision, answer.
@@ -238,7 +239,6 @@ def submit():
             }), 400
     
     content_id = f"c_{uuid.uuid4().hex[:12]}"
-    print('snag creator is')
     creator_id = payload.get("creator_id") or None
 
     if not isinstance(creator_id, str):
@@ -263,6 +263,7 @@ def submit():
         label=label,
         status="decided",
         confidence=confidence,
+        text=text,
     )
 
     return jsonify({
@@ -310,14 +311,119 @@ def appeal():
 
     reasoning = payload.get("reasoning")
     creator_id = content[0].get("creator_id")
-    audit.log_appeal(content_id, creator_id, reasoning)
+    appeal_id = f"c_{uuid.uuid4().hex[:12]}"
+    audit.log_appeal(content_id, creator_id, reasoning, appeal_id)
 
     return jsonify({
         "content_id": content_id,
         "creator_id": creator_id,
-        "confirmation": "Appeal received."
+        "confirmation": "Appeal received.",
+        "appeal_id": appeal_id,
     }), 200
 
+
+@app.get("/status")
+def status():
+    """
+    Expects {'content_id': ...}
+
+    Check appeal status.
+
+    """
+    payload = request.get_json(silent=True) or {}
+    
+    content_id = payload.get("content_id", "unknown")
+    content = audit.entries_for(content_id)
+    
+    if len(content) == 0:
+        return jsonify({
+            "error": "bad_request", 
+            "message": "content_id does not exist."
+            }), 400
+
+    if content[-1].get("status") == 'final decision':
+        return jsonify({
+            "content_id": content_id,
+            "status": 'decision appealed and decided',
+            "decision": content[-1].get("decision")
+        }), 200
+    elif content[-1].get("status") == 'under_review':
+        return jsonify({
+            "content_id": content_id,
+            "status": 'under review'
+        }), 200
+    elif content[-1].get("status") == 'decided':
+        return jsonify({
+            "content_id": content_id,
+            "status": 'initial decision'
+        }), 200
+
+@app.get("/review")
+def review():
+    """
+    Expects {'appeal_id': ...}
+    
+    Gets appeal and original decision for a reviewer to check.
+
+    """
+    payload = request.get_json(silent=True) or {}
+    
+    appeal_id = payload.get("appeal_id", "unknown")
+    appeal = audit.entries_for(appeal_id, True)
+    
+    if len(appeal) == 0:
+        return jsonify({
+            "error": "bad_request", 
+            "message": "appeal_id does not exist."
+            }), 400
+
+    content_id = appeal[0].get('content_id')
+    content = audit.entries_for(content_id)[0]
+
+    return [appeal, content], 200
+
+@app.post("/decide")
+def decide():
+    """
+    Expects {'content_id', ..., 'appeal_id': ..., 'verdict':, ..., 'decision': ..., 'notes':, ...}. 
+    'reviewer_id' (for the future)
+
+    Logs a decision made by a reviewer, which can be anyone as of now (11/11/2026). 
+    Maybe this will be fixed in the future.
+    """
+
+    payload = request.get_json(silent=True) or {}
+    
+    content_id = payload.get("content_id", "unknown")
+    appeal_id = payload.get("appeal_id", "unknown")
+    appeals = audit.entries_for(appeal_id, True)
+    
+    if len(appeals) == 0:
+        return jsonify({
+            "error": "bad_request", 
+            "message": "appeal_id does not exist."
+            }), 400
+
+    decision = payload.get("decision")
+    verdict = payload.get("verdict")
+    notes = payload.get("notes")
+    now = datetime.now(timezone.utc)
+
+    if not notes:
+        audit.log_appealed_decision(content_id, appeal_id, verdict, decision)
+    else:
+        audit.log_appealed_decision(content_id, appeal_id, verdict, decision, notes)
+
+    time_taken = (now - datetime.fromisoformat(appeals[-1].get('timestamp'))).total_seconds()
+
+    return jsonify({
+        "content_id": content_id,
+        "appeal_id": appeal_id,
+        "verdict": verdict,
+        "decision": decision,
+        "confirmation": "Appeal decided.", 
+        "time taken": time_taken
+    }), 200
 
 # ── Already works ─────────────────────────────────────────────────────────────
 
