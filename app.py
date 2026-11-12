@@ -315,7 +315,7 @@ def appeal():
     return jsonify({
         "content_id": content_id,
         "creator_id": creator_id,
-        "confirmation": "Appeal recieved."
+        "confirmation": "Appeal received."
     }), 200
 
 

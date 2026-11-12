@@ -762,3 +762,11 @@ I would shrink the score region where a piece of text is labeled `unsure` toward
 ---
 
 📖 **How to run this project: [RUNNING.md](RUNNING.md)**
+
+## Capstone
+
+**The Shape:**
+This is an extension of the previous Provenance Guard Project, in which I add a method for human reviews of `/appeal` requests. This will also measure how long an appeal takes to be reviewed. A new `/review` function will have to be written into `app.py` and another function to add the review to the audit log (`audit.py`). Timestamps are currently recorded in the audit log, so we will use those to calculate how long it takes for an appeal to be reviewed. I am creating a system for someone (anyone, really) to review an appeal and log a decision about it.
+
+**What's Out of Scope:**
+I thought about adding a third signal to be used in score calculation; right now, the majority of my text samples score as `unsure` when they should be one or the other. The false positives from the attack set last week also scored very poorly. I don't know at this time how to fix it so I will not. There is also the question of who gets to make the review, how many times something can be appealed, how to check on your appeal; none of which I will not be addressing at this time. 
