@@ -93,7 +93,7 @@ def log_appeal(content_id: str, creator_id: str, reasoning: str, appeal_id: str)
     })
 
 
-def log_appealed_decision(content_id: str, appeal_id: str, verdict: str, decision: str, notes: str | None = None, status = "final decision") -> dict:
+def log_appealed_decision(content_id: str, appeal_id: str, verdict: str, decision: str, **extra,) -> dict:
     """
     Record a decision after an appeal.
 
@@ -105,15 +105,16 @@ def log_appealed_decision(content_id: str, appeal_id: str, verdict: str, decisio
     Someone reading it later can see what was decided, that it was challenged, and 
     what the final decision was in what order.
     """
-    return _append({
+    entry = {
         "timestamp": _now(),
         "content_id": content_id,
         "appeal_id": appeal_id,
         "verdict": verdict,
         "decision": decision,
-        "notes": notes,
-        "status": status,
-    })
+        "status": "final decision",
+    }
+    entry.update(extra)
+    return _append(entry)
 
 
 def log_rejection(creator_id: str, reason: str, **extra) -> dict:
@@ -181,5 +182,5 @@ def entries_for(id: str, appeal: bool | None = None) -> list[dict]:
 
     if appeal:
         return [e for e in read_entries() if e.get("appeal_id") == id]
-        
+    
     return [e for e in read_entries() if e.get("content_id") == id]

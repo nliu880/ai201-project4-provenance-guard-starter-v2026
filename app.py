@@ -154,7 +154,7 @@ def health():
 # ── YOU BUILD THIS ────────────────────────────────────────────────────────────
 
 @app.post("/submit")
-# @limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
+@limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
 def submit():
     """
     Take a piece of text, decide about it, log the decision, answer.
@@ -206,6 +206,8 @@ def submit():
     import stylometry
     import scoring
 
+    then = datetime.now()
+    
     payload = request.get_json(silent=True) or {}
     text = payload.get("text") or {}
 
@@ -215,6 +217,15 @@ def submit():
             "message": 'Send properly formatted JSON with a non-empty "text" and "creator_id".'
             }), 400
 
+    content_id = f"c_{uuid.uuid4().hex[:12]}"
+    creator_id = payload.get("creator_id") or None
+
+    if not isinstance(creator_id, str):
+        return jsonify({
+            "error": "bad_request", 
+            "message": "Please include a creator_id as plain text."
+            }), 400
+    
     error_msg = jsonify({
             "error": "bad_request", 
             "message": "This model currently only supports English words and letters. Please do not use other languages or type in only punctuation or numbers."
@@ -224,27 +235,22 @@ def submit():
     
     if re.search(r"[[:cntrl:]]", text): # control characters
         print('control chars')
+        audit.log_rejection(creator_id, 'Control characters detected')
         return error_msg
     elif len(re.findall(r"\p{P}| |\d|\p{Emoji}", text)) == len(text): # all punctuation or all digits all emoji or some weird combo of that
         print('all punc or emoji or digits')
+        audit.log_rejection(creator_id, 'All emoji/puncutation/numbers')
         return error_msg
     elif len(re.findall(r"[^a-zA-Z\s\d\p{P}\n=<>]", text)) > 0: # not english
         print('not english?')
+        audit.log_rejection(creator_id, 'Not English')
         return error_msg
 
     if len(stylometry.words(text)) < 2 or len(stylometry.words(text)) >= 750: # too short or too long
-        return jsonify({
+            audit.log_rejection(creator_id, 'Text is either too short or too long')
+            return jsonify({
             "error": "bad_request", 
             "message": "Text is either too short or too long (one word or over 750 words)."
-            }), 400
-    
-    content_id = f"c_{uuid.uuid4().hex[:12]}"
-    creator_id = payload.get("creator_id") or None
-
-    if not isinstance(creator_id, str):
-        return jsonify({
-            "error": "bad_request", 
-            "message": "Please include a creator_id as plain text."
             }), 400
 
     model_score = detector.model_signal(text)
@@ -252,6 +258,7 @@ def submit():
     combined = scoring.combine_signals(model_score, style_score)
     confidence = 1 - abs(model_score - style_score) / max(model_score, style_score)
     guess, label = scoring.score_to_label(combined)
+    delta = (datetime.now() - then) .total_seconds()
 
     audit.log_decision(
         content_id=content_id,
@@ -264,6 +271,7 @@ def submit():
         status="decided",
         confidence=confidence,
         text=text,
+        time_taken = delta,
     )
 
     return jsonify({
@@ -275,6 +283,7 @@ def submit():
         "combined_score": combined,
         "label": label,
         "confidence": combined,
+        "time_taken": delta,
     }), 200
 
 
@@ -302,16 +311,18 @@ def appeal():
     
     content_id = payload.get("content_id", "unknown")
     content = audit.entries_for(content_id)
-    
+
+    reasoning = payload.get("reasoning")
+    creator_id = content[0].get("creator_id")
+    appeal_id = f"c_{uuid.uuid4().hex[:12]}"
+
     if len(content) == 0:
+        audit.log_rejection(creator_id, 'Tried to appeal non-existant content')
         return jsonify({
             "error": "bad_request", 
             "message": "content_id does not exist."
             }), 400
 
-    reasoning = payload.get("reasoning")
-    creator_id = content[0].get("creator_id")
-    appeal_id = f"c_{uuid.uuid4().hex[:12]}"
     audit.log_appeal(content_id, creator_id, reasoning, appeal_id)
 
     return jsonify({
@@ -395,10 +406,19 @@ def decide():
     payload = request.get_json(silent=True) or {}
     
     content_id = payload.get("content_id", "unknown")
+    content = audit.entries_for(content_id)
     appeal_id = payload.get("appeal_id", "unknown")
     appeals = audit.entries_for(appeal_id, True)
     
+    if len(content) == 0:
+        audit.log_rejection('None', 'Tried to decide non-existant content')
+        return jsonify({
+            "error": "bad_request", 
+            "message": "content_id does not exist."
+            }), 400
+    
     if len(appeals) == 0:
+        audit.log_rejection('None', 'Tried to decide non-existant appeal')
         return jsonify({
             "error": "bad_request", 
             "message": "appeal_id does not exist."
@@ -407,14 +427,21 @@ def decide():
     decision = payload.get("decision")
     verdict = payload.get("verdict")
     notes = payload.get("notes")
-    now = datetime.now(timezone.utc)
+    time_taken = (datetime.now(timezone.utc) - datetime.fromisoformat(appeals[-1].get('timestamp'))).total_seconds()
 
     if not notes:
-        audit.log_appealed_decision(content_id, appeal_id, verdict, decision)
+        audit.log_appealed_decision(content_id=content_id, 
+                                    appeal_id=appeal_id, 
+                                    verdict=verdict, 
+                                    decision=decision, 
+                                    time_taken=time_taken,)
     else:
-        audit.log_appealed_decision(content_id, appeal_id, verdict, decision, notes)
-
-    time_taken = (now - datetime.fromisoformat(appeals[-1].get('timestamp'))).total_seconds()
+        audit.log_appealed_decision(content_id=content_id, 
+                                    appeal_id=appeal_id, 
+                                    verdict=verdict, 
+                                    decision=decision, 
+                                    time_taken=time_taken,
+                                    notes=notes,)
 
     return jsonify({
         "content_id": content_id,
