@@ -880,3 +880,10 @@ ai201-project4-provenance-guard-starter-v2026 % curl -X GET http://127.0.0.1:500
 {"timestamp": "2026-11-14T07:32:14+00:00", "creator_id": "N/A", "event": "rejected", "status": "rejected", "reason": "Improper creator_id"}
 {"timestamp": "2026-11-14T07:32:21+00:00", "creator_id": "attacker_RQ12", "event": "rejected", "status": "rejected", "reason": "Text is empty."}
 ```
+
+**Diagnoses:**
+All five of my criteria were met. I think this is due to the fact that I tested the route and logging heavily as I built them in the previous milestones (see `unit4.jsonl` and `audit.jsonl`). As a result, everything I had wanted my extension to do was done correctly. Even the leftover 500 error from before was resolved by manually submitting instead of through `run_attacks.py` and resulted in a 400 error. 
+
+I don't think my targets were low; I honestly did think that some of the decision making on the model end would take much longer. I had gone through the previous logs and found the longest time to be around 4-5 seconds for a passage around 200 words. Text length and model procession time aren't linearly related, so I didn't expect ~700 words to taken 15 seconds, but I did expect it to take longer than 4 seconds. 
+
+Going forward, I would create new criteria around the appeal system, how many times you can appeal something, who can review an appeal, etc.
