@@ -211,19 +211,21 @@ def submit():
     payload = request.get_json(silent=True) or {}
     text = payload.get("text") or {}
 
-    if not isinstance(text, str) or not text.strip(): # empty json
-        return jsonify({
-            "error": "bad_request", 
-            "message": 'Send properly formatted JSON with a non-empty "text" and "creator_id".'
-            }), 400
-
     content_id = f"c_{uuid.uuid4().hex[:12]}"
     creator_id = payload.get("creator_id") or None
 
     if not isinstance(creator_id, str):
+        audit.log_rejection('N/A', 'Improper creator_id')
         return jsonify({
             "error": "bad_request", 
             "message": "Please include a creator_id as plain text."
+            }), 400
+
+    if not isinstance(text, str) or not text.strip(): # empty json
+        audit.log_rejection(creator_id, 'Text is empty.')
+        return jsonify({
+            "error": "bad_request", 
+            "message": 'Send properly formatted JSON with a non-empty "text" and "creator_id".'
             }), 400
     
     error_msg = jsonify({
@@ -312,17 +314,17 @@ def appeal():
     content_id = payload.get("content_id", "unknown")
     content = audit.entries_for(content_id)
 
-    reasoning = payload.get("reasoning")
-    creator_id = content[0].get("creator_id")
-    appeal_id = f"c_{uuid.uuid4().hex[:12]}"
-
     if len(content) == 0:
-        audit.log_rejection(creator_id, 'Tried to appeal non-existant content')
+        audit.log_rejection("N/A", 'Tried to appeal non-existant content')
         return jsonify({
             "error": "bad_request", 
             "message": "content_id does not exist."
             }), 400
 
+    reasoning = payload.get("reasoning")
+    creator_id = content[0].get("creator_id")
+    appeal_id = f"c_{uuid.uuid4().hex[:12]}"
+    
     audit.log_appeal(content_id, creator_id, reasoning, appeal_id)
 
     return jsonify({
@@ -336,37 +338,32 @@ def appeal():
 @app.get("/status")
 def status():
     """
-    Expects {'content_id': ...}
+    Expects {'appeal_id': ...}
 
     Check appeal status.
 
     """
     payload = request.get_json(silent=True) or {}
     
-    content_id = payload.get("content_id", "unknown")
-    content = audit.entries_for(content_id)
+    appeal_id = payload.get("appeal_id", "unknown")
+    appeal = audit.entries_for(appeal_id, True)
     
-    if len(content) == 0:
+    if len(appeal) == 0:
         return jsonify({
             "error": "bad_request", 
-            "message": "content_id does not exist."
+            "message": "appeal_id does not exist."
             }), 400
 
-    if content[-1].get("status") == 'final decision':
+    if appeal[-1].get("status") == 'final decision':
         return jsonify({
-            "content_id": content_id,
+            "appeal_id": appeal_id,
             "status": 'decision appealed and decided',
-            "decision": content[-1].get("decision")
+            "decision": appeal[-1].get("decision")
         }), 200
-    elif content[-1].get("status") == 'under_review':
+    elif appeal[-1].get("status") == 'under_review':
         return jsonify({
-            "content_id": content_id,
+            "appeal_id": appeal_id,
             "status": 'under review'
-        }), 200
-    elif content[-1].get("status") == 'decided':
-        return jsonify({
-            "content_id": content_id,
-            "status": 'initial decision'
         }), 200
 
 @app.get("/review")
@@ -411,14 +408,14 @@ def decide():
     appeals = audit.entries_for(appeal_id, True)
     
     if len(content) == 0:
-        audit.log_rejection('None', 'Tried to decide non-existant content')
+        audit.log_rejection('N/A', 'Tried to decide non-existent content')
         return jsonify({
             "error": "bad_request", 
             "message": "content_id does not exist."
             }), 400
     
     if len(appeals) == 0:
-        audit.log_rejection('None', 'Tried to decide non-existant appeal')
+        audit.log_rejection('N/A', 'Tried to decide non-existent appeal')
         return jsonify({
             "error": "bad_request", 
             "message": "appeal_id does not exist."
