@@ -132,3 +132,35 @@ There should be a clear distinction in scoring between the ends of the scoring a
      A number you missed stays where it is, gets diagnosed, and gets a fix
      attempted. That's where the points are.
      ───────────────────────────────────────────────────────────────────────── -->
+
+## EXTENSION:
+
+## 1. 6/6 types of errors when using `/submit` are logged correctly in the audit log.
+
+**Why this target:**
+
+I wrote 4 types of improper text catching into `/submit` based on the original attack set. Each one of them catches a different form of malformed text and it should do so each time.
+
+## 2. The cost per submitted decision takes no longer than 10 seconds 2/3 times. 
+
+**Why this target:**
+
+The longer the model takes to deliberate, the more nervous the user is. Only in difficult cases should it take a long time. Currently, the longest time taken for a submitted decision is ~4 seconds. Even nearing the word limit (750 words), I don't expect it to take more than double the current time.
+
+## 3. Every time a `POST` request is made, something is logged (10 options with `POST`, so 10/10 times).
+
+**Why this target:**
+
+A `POST` request means a user is trying to give something to the backend, which should be logged each time, even if there is an error in what the user was trying to post. 
+
+## 4. Checking on an appeal shows its status before and after its been reviewed (2/2). 
+
+**Why this target:**
+
+There are only two possible statuses for an appeal, `under_review` and `final_decision`, both of which must be reachable by a user. 
+
+## 5. Each form of malformed text from the initial attack set returns an error message of some type (20/20).
+
+**Why this target:**
+
+If a `/submit` request doesn't go through, especially the malformed ones, users should know why exactly so they don't have to spend time guessing as to what.
