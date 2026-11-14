@@ -97,7 +97,7 @@ position.**
 
 | Route | What it does | Example |
 |---|---|---|
-| `GET /status` | Checks the status of an appeal based on the content_id | `curl -X GET http://127.0.0.1:5000/status -H "Content-Type: application/json" -d'{"content_id": ...}` |
+| `GET /status` | Checks the status of an appeal based on the appeal_id | `curl -X GET http://127.0.0.1:5000/status -H "Content-Type: application/json" -d'{"appeal_id": ...}` |
 | `GET /review` | Gets the original decision and appeal in JSON based on the appeal_id | `curl -X GET http://127.0.0.1:5000/review -H "Content-Type: application/json" -d'{"appeal_id": ...}'` |
 | `POST /decide` | Sends the reviewer's decision out | `curl -X POST http://127.0.0.1:5000/decide -H "Content-Type: application/json" -d '{"content_id": ..., "appeal_id": ..., "verdict": ..., "decision": ...}'` |
 
