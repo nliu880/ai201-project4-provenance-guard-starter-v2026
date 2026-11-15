@@ -10,6 +10,8 @@ assumed — the starter ships one that already answers.
 
 ## Before your first class
 
+**Please ensure you are using Python version 3.13.15.**
+
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\Activate.ps1

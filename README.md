@@ -766,7 +766,7 @@ I would shrink the score region where a piece of text is labeled `unsure` toward
 ## Capstone
 
 **The Shape:**
-This is an extension of the previous Provenance Guard Project, in which I add a method for human reviews of `/appeal` requests. This will also measure how long an appeal takes to be reviewed. A new `/review` function will have to be written into `app.py` and another function to add the review to the audit log (`audit.py`). Timestamps are currently recorded in the audit log, so we will use those to calculate how long it takes for an appeal to be reviewed. I am creating a system for someone (anyone, really) to review an appeal and log a decision about it.
+This is an extension of the previous Provenance Guard Project (Shape C), in which I add a method for human reviews of `/appeal` requests. This will also measure how long an appeal takes to be reviewed. A new `/review` function will have to be written into `app.py` and another function to add the review to the audit log (`audit.py`). Timestamps are currently recorded in the audit log, so we will use those to calculate how long it takes for an appeal to be reviewed. I am creating a system for someone (anyone, really) to review an appeal and log a decision about it.
 
 **What's Out of Scope:**
 I thought about adding a third signal to be used in score calculation; right now, the majority of my text samples score as `unsure` when they should be one or the other. The false positives from the attack set last week also scored very poorly. I don't know at this time how to fix it so I will not. There is also the question of who gets to make the review, how many times something can be appealed, how to check on your appeal; none of which I will not be addressing at this time. 
@@ -776,9 +776,11 @@ The cost of this project is currently measured in seconds of compute, primarily 
 
 This cost for users sending their work in to be judged averages around 1.38 seconds per submission. At 100 submissions a day, this would cost around 138 seconds, which is a little over 2 minutes.
 
-1.44 seconds is reached by taking the average of the time taken for the model to reach a decision across the three trial runs used to judge the criterion. 
+1.38 seconds is reached by taking the average of the time taken for the model to reach a decision across the three trial runs used to judge the criterion. 
 
 `(5.548983 + 4.602205 + 0.127801 + 1.156658 + 0.061801 + 0.143108 + 0.45337 + 0.143517 + 0.150887) / 9 = 1.37648111`
+
+`1.38 seconds/user • 100 users/day = 138 seconds/day`
 
 **Instrumentation:**
 ```json
@@ -813,7 +815,7 @@ This cost for users sending their work in to be judged averages around 1.38 seco
 | 4. Checking on an appeal shows its status before and after its been reviewed (2/2). | 2 of 2 | 2/2 | 2/2 | 2/2 | MET |
 | 5. Each form of malformed text from the initial attack set returns an error message of some type (20/20). | 20 of 20 | 20/20 | 20/20 | 20/20 | MET |
 
-**Criterion 1:** produced by `curl -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{"text": "...", "creator_id": ...}'` and `app.py`, taken from `audit3.jsonl`
+**Criterion 1:** produced by `curl -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{"text": "...", "creator_id": ...}'`, the `\submit` function in `app.py`, taken from `audit3.jsonl`
 ```json
 {"timestamp": "2026-11-14T07:27:02+00:00", "creator_id": "attacker_MF01", "event": "rejected", "status": "rejected", "reason": "Text is empty."}
 {"timestamp": "2026-11-14T07:27:16+00:00", "creator_id": "attacker_MF02", "event": "rejected", "status": "rejected", "reason": "Text is either too short or too long"}
@@ -823,14 +825,14 @@ This cost for users sending their work in to be judged averages around 1.38 seco
 {"timestamp": "2026-11-14T07:30:54+00:00", "creator_id": "N/A", "event": "rejected", "status": "rejected", "reason": "Improper creator_id"}
 ```
 
-**Criterion 2:** produced by `curl -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{"text": "...", "creator_id": ...}'` and `app.py`, taken from `audit3.jsonl`
+**Criterion 2:** produced by `curl -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{"text": "...", "creator_id": ...}'`, the `\submit` function in `app.py`, taken from `audit3.jsonl`
 ```json 
 {"timestamp": "2026-11-14T07:33:05+00:00", "content_id": "c_268b6a5445e2", "creator_id": "homer", "guess": "human", "model_score": 0.3063, "style_score": 0.3771855268121695, "combined_score": 0.3417427634060848, "label": "We believe this text was written by a person.", "status": "decided", "confidence": 0.8120672142134738, "text": "Tell me, Muse, of the man of many ways, who was driven far journeys, after he had sacked Troy’s secret citadel. Many were they whose cities he saw, whose minds he learned of, many the pains he suffered on his spirit on the wide sea, struggling for his own life and the homecoming of his companions. Even so he could not save his companions, hard though he strove to; they were destroyed by their own wild recklessness, fools, who devoured the oxen of Helios, the Sun God, and he took away the day of their homecoming. From some point here, goddess, daughter of Zeus, speak, and begin our story.", "time_taken": 0.45337}
 {"timestamp": "2026-11-14T07:33:13+00:00", "content_id": "c_b5d313ef6553", "creator_id": "shelley", "guess": "unsure", "model_score": 0.5567, "style_score": 0.3286895341093181, "combined_score": 0.47689633693826133, "label": "We aren't sure whether this text was written by a person or generated by an AI model.", "status": "decided", "confidence": 0.5904248861313421, "text": "My first resolution was to quit Geneva for ever; my country, which, when I was happy and beloved, was dear to me, now, in my adversity, became hateful. I provided myself with a sum of money, together with a few jewels which had belonged to my mother, and departed.  And now my wanderings began which are to cease but with life. I have traversed a vast portion of the earth and have endured all the hardships which travellers in deserts and barbarous countries are wont to meet. How I have lived I hardly know; many times have I stretched my failing limbs upon the sandy plain and prayed for death. But revenge kept me alive; I dared not die and leave my adversary in being.  When I quitted Geneva my first labour was to gain some clue by which I might trace the steps of my fiendish enemy. But my plan was unsettled, and I wandered many hours round the confines of the town, uncertain what path I should pursue. As night approached I found myself at the entrance of the cemetery where William, Elizabeth, and my father reposed. I entered it and approached the tomb which marked their graves. Everything was silent except the leaves of the trees, which were gently agitated by the wind; the night was nearly dark, and the scene would have been solemn and affecting even to an uninterested observer. The spirits of the departed seemed to flit around and to cast a shadow, which was felt but not seen, around the head of the mourner.  The deep grief which this scene had at first excited quickly gave way to rage and despair. They were dead, and I lived; their murderer also lived, and to destroy him I must drag out my weary existence. I knelt on the grass and kissed the earth and with quivering lips exclaimed, \"By the sacred earth on which I kneel, by the shades that wander near me, by the deep and eternal grief that I feel, I swear; and by thee, O Night, and the spirits that preside over thee, to pursue the daemon who caused this misery, until he or I shall perish in mortal conflict. For this purpose I will preserve my life; to execute this dear revenge will I again behold the sun and tread the green herbage of earth, which otherwise should vanish from my eyes for ever. And I call on you, spirits of the dead, and on you, wandering ministers of vengeance, to aid and conduct me in my work. Let the cursed and hellish monster drink deep of agony; let him feel the despair that now torments me.\"  I had begun my adjuration with solemnity and an awe which almost assured me that the shades of my murdered friends heard and approved my devotion, but the furies possessed me as I concluded, and rage choked my utterance.  I was answered through the stillness of night by a loud and fiendish laugh. It rang on my ears long and heavily; the mountains re-echoed it, and I felt as if all hell surrounded me with mockery and laughter. Surely in that moment I should have been possessed by frenzy and have destroyed my miserable existence but that my vow was heard and that I was reserved for vengeance. The laughter died away, when a well-known and abhorred voice, apparently close to my ear, addressed me in an audible whisper, \"I am satisfied, miserable wretch! You have determined to live, and I am satisfied.\"  I darted towards the spot from which the sound proceeded, but the devil eluded my grasp. Suddenly the broad disk of the moon arose and shone full upon his ghastly and distorted shape as he fled with more than mortal speed.  I pursued him, and for many months this has been my task. Guided by a slight clue, I followed the windings of the Rhone, but vainly. The blue Mediterranean appeared, and by a strange chance, I saw the fiend enter by night and hide himself in a vessel bound for the Black Sea. I took my passage in the same ship, but he escaped, I know not how.", "time_taken": 0.143517}
 {"timestamp": "2026-11-14T07:48:13+00:00", "content_id": "c_99f12873cff6", "creator_id": "carroll", "guess": "unsure", "model_score": 0.7023, "style_score": 0.4399477356791985, "combined_score": 0.6104767074877195, "label": "We aren't sure whether this text was written by a person or generated by an AI model.", "status": "decided", "confidence": 0.6264384674344275, "text": "’Twas brillig, and the slithy toves       Did gyre and gimble in the wabe: All mimsy were the borogoves,       And the mome raths outgrabe.  “Beware the Jabberwock, my son!       The jaws that bite, the claws that catch! Beware the Jubjub bird, and shun       The frumious Bandersnatch!”  He took his vorpal sword in hand;       Long time the manxome foe he sought— So rested he by the Tumtum tree       And stood awhile in thought.  And, as in uffish thought he stood,       The Jabberwock, with eyes of flame, Came whiffling through the tulgey wood,       And burbled as it came!  One, two! One, two! And through and through       The vorpal blade went snicker-snack! He left it dead, and with its head       He went galumphing back.  “And hast thou slain the Jabberwock?       Come to my arms, my beamish boy! O frabjous day! Callooh! Callay!”       He chortled in his joy.  ’Twas brillig, and the slithy toves       Did gyre and gimble in the wabe: All mimsy were the borogoves,       And the mome raths outgrabe.", "time_taken": 0.150887}
 ```
 
-**Criterion 3:** produced by `curl -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{"text": "...", "creator_id": ...}'` and `app.py`, taken from `audit3.jsonl`
+**Criterion 3:** produced by `curl -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{"text": "...", "creator_id": ...}'`, the `\submit` `\appeal` and `\decide` functions in `app.py`, taken from `audit3.jsonl`
 ```json
 {"timestamp": "2026-11-14T07:27:02+00:00", "creator_id": "attacker_MF01", "event": "rejected", "status": "rejected", "reason": "Text is empty."}
 {"timestamp": "2026-11-14T07:27:16+00:00", "creator_id": "attacker_MF02", "event": "rejected", "status": "rejected", "reason": "Text is either too short or too long"}
@@ -847,7 +849,7 @@ This cost for users sending their work in to be judged averages around 1.38 seco
 {"timestamp": "2026-11-14T07:58:14+00:00", "creator_id": "N/A", "event": "rejected", "status": "rejected", "reason": "Tried to decide non-existent appeal"}
 ```
 
-**Criterion 4:** produced by `curl -X GET http://127.0.0.1:5000/status -H "Content-Type: application/json" -d '{"appeal_id": ...}'` and `app.py`, taken from terminal output
+**Criterion 4:** produced by `curl -X GET http://127.0.0.1:5000/status -H "Content-Type: application/json" -d '{"appeal_id": ...}'`, the `\status` function in `app.py`, taken from terminal output
 ```bash
 ai201-project4-provenance-guard-starter-v2026 % curl -X GET http://127.0.0.1:5000/status -H "Content-Type: application/json" -d '{"appeal_id": "c_e0558a968a8b"}'
 {
@@ -863,7 +865,7 @@ ai201-project4-provenance-guard-starter-v2026 % curl -X GET http://127.0.0.1:500
 }
 ```
 
-**Criterion 5:** produced by `curl -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{"text": "...", "creator_id": ...}'` and `app.py`, taken from `audit3.jsonl`
+**Criterion 5:** produced by `curl -X POST http://127.0.0.1:5000/submit -H "Content-Type: application/json" -d '{"text": "...", "creator_id": ...}'`, the `\submit` function in `app.py`, taken from `audit3.jsonl`
 ```json
 {"timestamp": "2026-11-14T07:27:02+00:00", "creator_id": "attacker_MF01", "event": "rejected", "status": "rejected", "reason": "Text is empty."}
 {"timestamp": "2026-11-14T07:27:16+00:00", "creator_id": "attacker_MF02", "event": "rejected", "status": "rejected", "reason": "Text is either too short or too long"}
@@ -894,5 +896,10 @@ I don't think my targets were low; I honestly did think that some of the decisio
 
 Going forward, I would create new criteria around the appeal system, how many times you can appeal something, who can review an appeal, etc.
 
+**The Improvement:**
+
 **What's Still Broken:**
 The notes from the version of this from the previous unit still apply; the style score and combined scoring still hasn't been fixed. But now that a review and decide route for the appeal has been written, it shows what's to be done still in these areas. Right now, anyone can review an appeal and approve it, which defeats the purpose of this system. A decision can also be appealed more than once. Both of these issues need to be fixed in future implementations. Who is allowed to review appeals can be fixed by asking for a `reviewer_id`, which would need to be on the approved list in `config.py` beforehand. This is the first thing I'd fix if given more time. 
+
+**How I Used AI:**
+I did not use AI this extension.

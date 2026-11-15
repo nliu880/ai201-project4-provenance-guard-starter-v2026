@@ -135,11 +135,11 @@ There should be a clear distinction in scoring between the ends of the scoring a
 
 ## EXTENSION:
 
-## 1. 6/6 types of errors when using `/submit` are logged correctly in the audit log.
+## 1. 6/6 types of errors when using `/submit` show up in the audit log when triggered.
 
 **Why this target:**
 
-I wrote 4 types of improper text catching into `/submit` based on the original attack set. Each one of them catches a different form of malformed text and it should do so each time.
+I wrote 6 types of improper entry catching into `/submit` based on the original attack set. Each one of them catches a different form of malformed text and it should do so each time. The catches are for improper creator_id, empty text, detected control characters, an all punctuation/numerical/emoji text, non-English text, or a too short or too long text. 
 
 ## 2. The cost per submitted decision takes no longer than 10 seconds 2/3 times. 
 
@@ -147,7 +147,7 @@ I wrote 4 types of improper text catching into `/submit` based on the original a
 
 The longer the model takes to deliberate, the more nervous the user is. Only in difficult cases should it take a long time. Currently, the longest time taken for a submitted decision is ~4 seconds. Even nearing the word limit (750 words), I don't expect it to take more than double the current time.
 
-## 3. Every time a `POST` request is made, something is logged (10 options with `POST`, so 10/10 times).
+## 3. Every time a `POST` request is made, something is logged (13 options with `POST`, so 13/13 times).
 
 **Why this target:**
 
