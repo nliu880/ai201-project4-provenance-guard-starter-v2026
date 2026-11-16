@@ -153,6 +153,21 @@ The longer the model takes to deliberate, the more nervous the user is. Only in 
 
 A `POST` request means a user is trying to give something to the backend, which should be logged each time, even if there is an error in what the user was trying to post. 
 
+The 13 `POST` options are: 
+- Improper creator_id with `/submit`
+- Empty text with `/submit`
+- Control characters in text with `/submit`
+- All puncutation, numbers, or emojis with `/submit`
+- Non-English text with `/submit`
+- Too short or too long text with `/submit`
+- Successful submission with `/submit`
+- Non-existant content_id with `/appeal`
+- Successful appeal with `/appeal`
+- Non-existant content_id with `/decide`
+- Non-existant appeal_id with `/decide`
+- Successful decision without notes with `/decide`
+- Successful decision with notes with `/decide`
+
 ## 4. Checking on an appeal shows its status before and after its been reviewed (2/2). 
 
 **Why this target:**

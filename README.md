@@ -765,11 +765,17 @@ I would shrink the score region where a piece of text is labeled `unsure` toward
 
 ## Capstone
 
+**What This Extends:**
+This is an extension of the previous Provenance Guard Project. I will be adding a review method for the appeals. 
+
 **The Shape:**
 This is an extension of the previous Provenance Guard Project (Shape C), in which I add a method for human reviews of `/appeal` requests. This will also measure how long an appeal takes to be reviewed. A new `/review` function will have to be written into `app.py` and another function to add the review to the audit log (`audit.py`). Timestamps are currently recorded in the audit log, so we will use those to calculate how long it takes for an appeal to be reviewed. I am creating a system for someone (anyone, really) to review an appeal and log a decision about it.
 
 **What's Out of Scope:**
 I thought about adding a third signal to be used in score calculation; right now, the majority of my text samples score as `unsure` when they should be one or the other. The false positives from the attack set last week also scored very poorly. I don't know at this time how to fix it so I will not. There is also the question of who gets to make the review, how many times something can be appealed, how to check on your appeal; none of which I will not be addressing at this time. 
+
+**Running It:**
+This project is run through Path B, which is to say locally. Please see `RUNNING.md` for more instructions. 
 
 **What it Costs:**
 The cost of this project is currently measured in seconds of compute, primarily in how long it takes the model to come to a decision (`ai`/`unsure`/`human`). How long it takes an appeal to be reviewed and decided is also timed, but that depends less on the system itself. 
@@ -811,7 +817,7 @@ This cost for users sending their work in to be judged averages around 1.38 seco
 |---|---|---|---|---|---|
 | 1. 6/6 types of errors when using `/submit` are logged correctly in the audit log. | 6 of 6 | 6/6 | 6/6 | 6/6 | MET |
 | 2. The cost per submitted decision takes no longer than 10 seconds 2/3 times. | 2 of 3 | 3/3 | 3/3 | 3/3 | MET |
-| 3. Every time a `POST` request is made, something is logged (12 options with `POST`, so 13/13 times). | 13 of 13 | 13/13 | 13/13 | 13/13 | MET |
+| 3. Every time a `POST` request is made, something is logged (13 options with `POST`, so 13/13 times). | 13 of 13 | 13/13 | 13/13 | 13/13 | MET |
 | 4. Checking on an appeal shows its status before and after its been reviewed (2/2). | 2 of 2 | 2/2 | 2/2 | 2/2 | MET |
 | 5. Each form of malformed text from the initial attack set returns an error message of some type (20/20). | 20 of 20 | 20/20 | 20/20 | 20/20 | MET |
 

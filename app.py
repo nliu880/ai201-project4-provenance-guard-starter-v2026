@@ -215,14 +215,14 @@ def submit():
     creator_id = payload.get("creator_id") or None
 
     if not isinstance(creator_id, str):
-        audit.log_rejection('N/A', 'Improper creator_id', text=text, time_taken= (datetime.now()-then).toseconds())
+        audit.log_rejection('N/A', 'Improper creator_id', text=text, time_taken=(datetime.now()-then).total_seconds())
         return jsonify({
             "error": "bad_request", 
             "message": "Please include a creator_id as plain text."
             }), 400
 
     if not isinstance(text, str) or not text.strip(): # empty json
-        audit.log_rejection(creator_id, 'Text is empty.', text=text, time_taken= (datetime.now()-then).toseconds())
+        audit.log_rejection(creator_id, 'Text is empty.', text=text, time_taken=(datetime.now()-then).total_seconds())
         return jsonify({
             "error": "bad_request", 
             "message": 'Send properly formatted JSON with a non-empty "text" and "creator_id".'
@@ -237,19 +237,19 @@ def submit():
     
     if re.search(r"[[:cntrl:]]", text): # control characters
         print('control chars')
-        audit.log_rejection(creator_id, 'Control characters detected', text=text, time_taken= (datetime.now()-then).toseconds())
+        audit.log_rejection(creator_id, 'Control characters detected', text=text, time_taken=(datetime.now()-then).total_seconds())
         return error_msg
     elif len(re.findall(r"\p{P}| |\d|\p{Emoji}", text)) == len(text): # all punctuation or all digits all emoji or some weird combo of that
         print('all punc or emoji or digits')
-        audit.log_rejection(creator_id, 'All emoji/puncutation/numbers', text=text, time_taken= (datetime.now()-then).toseconds())
+        audit.log_rejection(creator_id, 'All emoji/puncutation/numbers', text=text, time_taken=(datetime.now()-then).total_seconds())
         return error_msg
     elif len(re.findall(r"[^a-zA-Z\s\d\p{P}\n=<>]", text)) > 0: # not english
         print('not english?')
-        audit.log_rejection(creator_id, 'Not English', text=text, time_taken= (datetime.now()-then).toseconds())
+        audit.log_rejection(creator_id, 'Not English', text=text, time_taken=(datetime.now()-then).total_seconds())
         return error_msg
 
     if len(stylometry.words(text)) < 2 or len(stylometry.words(text)) >= 750: # too short or too long
-            audit.log_rejection(creator_id, 'Text is either too short or too long', text=text, time_taken= (datetime.now()-then).toseconds())
+            audit.log_rejection(creator_id, 'Text is either too short or too long', text=text, time_taken=(datetime.now()-then).total_seconds())
             return jsonify({
             "error": "bad_request", 
             "message": "Text is either too short or too long (one word or over 750 words)."
@@ -314,23 +314,23 @@ def appeal():
     payload = request.get_json(silent=True) or {}
     
     content_id = payload.get("content_id", "unknown")
+    reasoning = payload.get("reasoning")
     content = audit.entries_for(content_id)
 
     if len(content) == 0:
         audit.log_rejection("N/A", 'Tried to appeal non-existant content', 
                             given=content_id, 
                             reasoning=reasoning, 
-                            time_taken= (datetime.now()-then).toseconds())
+                            time_taken=(datetime.now()-then).total_seconds())
         return jsonify({
             "error": "bad_request", 
             "message": "content_id does not exist."
             }), 400
 
-    reasoning = payload.get("reasoning")
     creator_id = content[0].get("creator_id")
     appeal_id = f"c_{uuid.uuid4().hex[:12]}"
     
-    audit.log_appeal(content_id, creator_id, reasoning, appeal_id, time_taken= (datetime.now()-then).toseconds())
+    audit.log_appeal(content_id, creator_id, reasoning, appeal_id, time_taken=(datetime.now()-then).total_seconds())
 
     return jsonify({
         "content_id": content_id,
@@ -415,7 +415,7 @@ def decide():
     
     if len(content) == 0:
         audit.log_rejection('N/A', 'Tried to decide non-existent content', 
-                            given=content_id, time_taken= (datetime.now()-then).toseconds())
+                            given=content_id, time_taken=(datetime.now()-then).total_seconds())
         return jsonify({
             "error": "bad_request", 
             "message": "content_id does not exist."
@@ -423,7 +423,7 @@ def decide():
     
     if len(appeals) == 0:
         audit.log_rejection('N/A', 'Tried to decide non-existent appeal', 
-                            given=appeal_id, time_taken= (datetime.now()-then).toseconds())
+                            given=appeal_id, time_taken=(datetime.now()-then).total_seconds())
         return jsonify({
             "error": "bad_request", 
             "message": "appeal_id does not exist."
@@ -454,7 +454,7 @@ def decide():
         "verdict": verdict,
         "decision": decision,
         "confirmation": "Appeal decided.", 
-        "time taken": time_taken
+        "time_taken": time_taken
     }), 200
 
 # ── Already works ─────────────────────────────────────────────────────────────
