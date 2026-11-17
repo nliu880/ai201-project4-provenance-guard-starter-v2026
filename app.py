@@ -320,7 +320,6 @@ def appeal():
     if len(content) == 0:
         audit.log_rejection("N/A", 'Tried to appeal non-existant content', 
                             given=content_id, 
-                            reasoning=reasoning, 
                             time_taken=(datetime.now()-then).total_seconds())
         return jsonify({
             "error": "bad_request", 
