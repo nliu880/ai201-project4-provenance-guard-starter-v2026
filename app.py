@@ -205,10 +205,19 @@ def submit():
     import detector
     import stylometry
     import scoring
+    import json
 
     then = datetime.now()
     
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+
+    if not isinstance(payload, dict):
+        audit.log_rejection('N/A', 'Not a JSON object', text=payload, time_taken=(datetime.now()-then).total_seconds())
+        return jsonify({
+            "error": "bad_request", 
+            "message": "Please submit as a JSON object"
+            }), 400
+
     text = payload.get("text") or {}
 
     content_id = f"c_{uuid.uuid4().hex[:12]}"

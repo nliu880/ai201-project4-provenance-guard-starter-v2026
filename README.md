@@ -977,13 +977,13 @@ after that, a second or two each.
 ```
 
 **Diagnoses:**
-All five of my criteria were met. I think this is due to the fact that I tested the route and logging heavily as I built them in the previous milestones (see `unit4.jsonl` and `audit.jsonl`). As a result, everything I had wanted my extension to do was done correctly. Even the leftover 500 error from before was resolved by manually submitting instead of through `run_attacks.py` and resulted in a 400 error. 
+The majority of my criteria were met. I think this is due to the fact that I tested the route and logging heavily as I built them in the previous milestones (see `unit4.jsonl` and `audit.jsonl`). As a result, everything I had wanted my extension to do was done correctly. 
 
-I don't think my targets were low; I honestly did think that some of the decision making on the model end would take much longer. I had gone through the previous logs and found the longest time to be around 4-5 seconds for a passage around 200 words. Text length and model procession time aren't linearly related, so I didn't expect ~700 words to taken 15 seconds, but I did expect it to take longer than 4 seconds. 
-
-Going forward, I would create new criteria around the appeal system, how many times you can appeal something, who can review an appeal, etc.
+The one thing missed was the leftover `500` error from the previous unit, where the JSON body was improperly formatted as an array. There was no catch in `\submit` and `app.py` for this type of improper formatting.
 
 **The Improvement:**
+
+I added a catch in `app.py` to ensure that the input in a `\submit` request was properly formatted as JSON or a dictionary. 
 
 **What's Still Broken:**
 The notes from the version of this from the previous unit still apply; the style score and combined scoring still hasn't been fixed. But now that a review and decide route for the appeal has been written, it shows what's to be done still in these areas. Right now, anyone can review an appeal and approve it, which defeats the purpose of this system. A decision can also be appealed more than once. Both of these issues need to be fixed in future implementations. Who is allowed to review appeals can be fixed by asking for a `reviewer_id`, which would need to be on the approved list in `config.py` beforehand. This is the first thing I'd fix if given more time. 
