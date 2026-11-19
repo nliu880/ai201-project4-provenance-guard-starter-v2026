@@ -248,7 +248,7 @@ def submit():
         audit.log_rejection(creator_id, 'Not English', text=text, time_taken=(datetime.now()-then).total_seconds())
         return error_msg
 
-    if len(stylometry.words(text)) < 2 or len(stylometry.words(text)) >= 750: # too short or too long
+    if len(stylometry.words(text)) < 3 or len(stylometry.words(text)) >= 750: # too short or too long
             audit.log_rejection(creator_id, 'Text is either too short or too long', text=text, time_taken=(datetime.now()-then).total_seconds())
             return jsonify({
             "error": "bad_request", 

@@ -186,3 +186,4 @@
 {"timestamp": "2026-11-17T04:51:25+00:00", "creator_id": "N/A", "event": "rejected", "status": "rejected", "reason": "Tried to decide non-existent appeal", "given": "c_46d1de1796", "time_taken": 0.002128}
 {"timestamp": "2026-11-17T04:51:25+00:00", "content_id": "c_2d36989782e9", "appeal_id": "c_46d1de17968d", "verdict": "overturned", "decision": "human", "status": "final decision", "time_taken": 0.274082}
 {"timestamp": "2026-11-17T04:51:25+00:00", "content_id": "c_2d36989782e9", "appeal_id": "c_46d1de17968d", "verdict": "overturned", "decision": "human", "status": "final decision", "time_taken": 0.279251, "notes": "some notes"}
+{"timestamp": "2026-11-19T02:42:38+00:00", "creator_id": "me", "event": "rejected", "status": "rejected", "reason": "Text is either too short or too long", "text": "some writing", "time_taken": 0.000889}
