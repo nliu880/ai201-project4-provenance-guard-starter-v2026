@@ -33,6 +33,7 @@ def _now() -> str:
 
 
 def log_decision(
+    reviewer_id: str,
     content_id: str,
     creator_id: str,
     guess: str | None = None,
@@ -60,6 +61,7 @@ def log_decision(
     """
     entry = {
         "timestamp": _now(),
+        "reviewer_id": reviewer_id,
         "content_id": content_id,
         "creator_id": creator_id,
         "guess": guess,

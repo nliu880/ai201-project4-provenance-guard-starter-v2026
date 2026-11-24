@@ -1,5 +1,7 @@
 # Provenance Guard
 
+**NOTE: This project was started from Unit 4 in Codepath's AI201 course (November 2026). I have added to it since then. All new additions will be placed at the top of this file, after the Start Here message.**
+
 > ### 👋 Start here
 >
 > **New to this repo? Read [RUNNING.md](RUNNING.md) first.**
@@ -23,6 +25,15 @@
 >
 > **The rest of this file is your submission.** Fill it in as you go.
 
+---
+
+- Added a reviewer ID parameter for `/decide` and rejection path for incorrect ones. Allowed reviewer IDs are in `config.py`.
+
+**To Add/Modify:**
+- A limit to the amount of times something can be appealed
+- Also a limit to the amount of times an appeal can be decided, since you can decide multiple times per appeal right now
+- A way to get the list of appeals to be reviewed still (review queue?)
+- `style_score` and scoring need to be modified
 ---
 
 <!-- ─────────────────────────────────────────────────────────────────────────

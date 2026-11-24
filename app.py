@@ -299,6 +299,7 @@ def submit():
 
 
 @app.post("/appeal")
+@limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
 def appeal():
     """
     A writer says you got it wrong. 
@@ -406,20 +407,29 @@ def review():
 @app.post("/decide")
 def decide():
     """
-    Expects {'content_id', ..., 'appeal_id': ..., 'verdict':, ..., 'decision': ..., 'notes':, ...}. 
-    'reviewer_id' (for the future)
+    Expects {'reviewer_id': ..., 'content_id': ..., 'appeal_id': ..., 
+                'verdict': ..., 'decision': ..., 'notes': ...}. 
 
-    Logs a decision made by a reviewer, which can be anyone as of now (11/11/2026). 
-    Maybe this will be fixed in the future.
+    Logs a decision made by a reviewer.
     """
     then = datetime.now()
 
     payload = request.get_json(silent=True) or {}
     
+    reviewer_id = payload.get("reviewer_id", "unknown")
+
+    print(payload, config.REVIEWER_IDS, reviewer_id)
+
+    if reviewer_id not in config.REVIEWER_IDS:
+        audit.log_rejection('N/A', 'Invalid reviewed_id given', 
+                            given=reviewer_id, time_taken=(datetime.now()-then).total_seconds())
+        return jsonify({
+            "error": "bad_request", 
+            "message": "Invalid reviewer_id."
+            }), 400
+    
     content_id = payload.get("content_id", "unknown")
     content = audit.entries_for(content_id)
-    appeal_id = payload.get("appeal_id", "unknown")
-    appeals = audit.entries_for(appeal_id, True)
     
     if len(content) == 0:
         audit.log_rejection('N/A', 'Tried to decide non-existent content', 
@@ -428,6 +438,9 @@ def decide():
             "error": "bad_request", 
             "message": "content_id does not exist."
             }), 400
+    
+    appeal_id = payload.get("appeal_id", "unknown")
+    appeals = audit.entries_for(appeal_id, True)
     
     if len(appeals) == 0:
         audit.log_rejection('N/A', 'Tried to decide non-existent appeal', 
@@ -443,13 +456,15 @@ def decide():
     time_taken = (datetime.now(timezone.utc) - datetime.fromisoformat(appeals[-1].get('timestamp'))).total_seconds()
 
     if not notes:
-        audit.log_appealed_decision(content_id=content_id, 
+        audit.log_appealed_decision(reviewer_id=reviewer_id,
+                                    content_id=content_id, 
                                     appeal_id=appeal_id, 
                                     verdict=verdict, 
                                     decision=decision, 
                                     time_taken=time_taken,)
     else:
-        audit.log_appealed_decision(content_id=content_id, 
+        audit.log_appealed_decision(reviewer_id=reviewer_id,
+                                    content_id=content_id, 
                                     appeal_id=appeal_id, 
                                     verdict=verdict, 
                                     decision=decision, 
@@ -457,6 +472,7 @@ def decide():
                                     notes=notes,)
 
     return jsonify({
+        "reviewer_id":reviewer_id,
         "content_id": content_id,
         "appeal_id": appeal_id,
         "verdict": verdict,
