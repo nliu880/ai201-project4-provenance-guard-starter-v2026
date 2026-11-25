@@ -28,10 +28,9 @@
 ---
 
 - Added a reviewer ID parameter for `/decide` and rejection path for incorrect ones. Allowed reviewer IDs are in `config.py`.
-- Added limit to number of times a piece of content can be appealed (2).
+- Added limit to number of times a piece of content can be appealed (2) and decided upon (3).
 
 **To Add/Modify:**
-- Also a limit to the amount of times an appeal can be decided, since you can decide multiple times per appeal right now
 - A way to get the list of appeals to be reviewed still (review queue?)
 - `style_score` and scoring need to be modified
 ---
