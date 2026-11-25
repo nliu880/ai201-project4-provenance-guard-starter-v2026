@@ -33,7 +33,6 @@ def _now() -> str:
 
 
 def log_decision(
-    reviewer_id: str,
     content_id: str,
     creator_id: str,
     guess: str | None = None,
@@ -41,9 +40,7 @@ def log_decision(
     style_score: float | None = None,
     combined_score: float | None = None,
     label: str | None = None,
-    status: str = "decided",
-    **extra,
-) -> dict:
+    **extra,) -> dict:
     """
     Write one decision to the audit log.
 
@@ -61,21 +58,25 @@ def log_decision(
     """
     entry = {
         "timestamp": _now(),
-        "reviewer_id": reviewer_id,
         "content_id": content_id,
         "creator_id": creator_id,
+        "event": "decision",
+        "status": "decided",        
         "guess": guess,
         "model_score": model_score,
         "style_score": style_score,
         "combined_score": combined_score,
         "label": label,
-        "status": status,
     }
     entry.update(extra)
     return _append(entry)
 
 
-def log_appeal(content_id: str, creator_id: str, reasoning: str, appeal_id: str, **extra) -> dict:
+def log_appeal(content_id: str, 
+               appeal_id: str, 
+               creator_id: str, 
+               reasoning: str, 
+               **extra,) -> dict:
     """
     Record an appeal beside the original decision.
 
@@ -88,22 +89,28 @@ def log_appeal(content_id: str, creator_id: str, reasoning: str, appeal_id: str,
     entry = {
         "timestamp": _now(),
         "content_id": content_id,
+        "appeal_id": appeal_id,
         "creator_id": creator_id,
         "event": "appeal",
         "status": "under_review",
         "reasoning": reasoning,
-        "appeal_id": appeal_id,
     }
     entry.update(extra)
     return _append(entry)
 
 
-def log_appealed_decision(content_id: str, appeal_id: str, verdict: str, decision: str, **extra,) -> dict:
+def log_appealed_decision(content_id: str, 
+                          appeal_id: str, 
+                          reviewer_id: str,
+                          verdict: str, 
+                          decision: str, 
+                          **extra,) -> dict:
     """
     Record a decision after an appeal.
 
     verdict: overturned, upheld
     decision: human, ai
+    status: second decision, final decision
 
     This doesn't overwrite anything. The log is append-only, so the original
     decision and appeal stay exactly where they were and the decision sits after it. 
@@ -114,9 +121,11 @@ def log_appealed_decision(content_id: str, appeal_id: str, verdict: str, decisio
         "timestamp": _now(),
         "content_id": content_id,
         "appeal_id": appeal_id,
+        "reviewer_id": reviewer_id,
+        "event": "decision",
+        "status": "decided",
         "verdict": verdict,
         "decision": decision,
-        "status": "final decision",
     }
     entry.update(extra)
     return _append(entry)
@@ -135,7 +144,7 @@ def log_rejection(creator_id: str, reason: str, **extra) -> dict:
     return _append({
         "timestamp": _now(),
         "creator_id": creator_id,
-        "event": "rejected",
+        "event": "rejection",
         "status": "rejected",
         "reason": reason,
         **extra,

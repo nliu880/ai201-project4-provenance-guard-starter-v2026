@@ -279,7 +279,6 @@ def submit():
         style_score=style_score,
         combined_score=combined,
         label=label,
-        status="decided",
         confidence=confidence,
         text=text,
         time_taken=delta,
@@ -336,10 +335,29 @@ def appeal():
             "message": "content_id does not exist."
             }), 400
 
+    appeals = 0
+    for entry in content:
+        if entry.get("reasoning"):
+            appeals += 1
+
+        if appeals == 2:
+            audit.log_rejection("N/A", 'Maximum number of appeals per content (2) reached.', 
+                            given=content_id, 
+                            time_taken=(datetime.now()-then).total_seconds())
+            return jsonify({
+                "error": "bad_request", 
+                "message": "Maximum number of appeals per content (2) reached."
+                }), 400
+
     creator_id = content[0].get("creator_id")
     appeal_id = f"c_{uuid.uuid4().hex[:12]}"
     
-    audit.log_appeal(content_id, creator_id, reasoning, appeal_id, time_taken=(datetime.now()-then).total_seconds())
+    audit.log_appeal(content_id=content_id, 
+                     appeal_id=appeal_id,  
+                     creator_id=creator_id,
+                     reasoning=reasoning, 
+                     time_taken=(datetime.now()-then).total_seconds()
+                     )
 
     return jsonify({
         "content_id": content_id,
@@ -410,6 +428,9 @@ def decide():
     Expects {'reviewer_id': ..., 'content_id': ..., 'appeal_id': ..., 
                 'verdict': ..., 'decision': ..., 'notes': ...}. 
 
+    'verdict': ['upheld', 'overturned']
+    'decision': ['human', 'ai']
+
     Logs a decision made by a reviewer.
     """
     then = datetime.now()
@@ -418,11 +439,10 @@ def decide():
     
     reviewer_id = payload.get("reviewer_id", "unknown")
 
-    print(payload, config.REVIEWER_IDS, reviewer_id)
-
     if reviewer_id not in config.REVIEWER_IDS:
         audit.log_rejection('N/A', 'Invalid reviewed_id given', 
-                            given=reviewer_id, time_taken=(datetime.now()-then).total_seconds())
+                            given=reviewer_id, 
+                            time_taken=(datetime.now()-then).total_seconds())
         return jsonify({
             "error": "bad_request", 
             "message": "Invalid reviewer_id."
@@ -433,7 +453,8 @@ def decide():
     
     if len(content) == 0:
         audit.log_rejection('N/A', 'Tried to decide non-existent content', 
-                            given=content_id, time_taken=(datetime.now()-then).total_seconds())
+                            given=content_id, 
+                            time_taken=(datetime.now()-then).total_seconds())
         return jsonify({
             "error": "bad_request", 
             "message": "content_id does not exist."
@@ -444,11 +465,27 @@ def decide():
     
     if len(appeals) == 0:
         audit.log_rejection('N/A', 'Tried to decide non-existent appeal', 
-                            given=appeal_id, time_taken=(datetime.now()-then).total_seconds())
+                            given=appeal_id, 
+                            time_taken=(datetime.now()-then).total_seconds())
         return jsonify({
             "error": "bad_request", 
             "message": "appeal_id does not exist."
             }), 400
+
+    count = 1
+
+    for entry in content:
+        if entry.get("event") == 'decision':
+            count += 1
+
+        if count >= 2:
+            audit.log_rejection('N/A', 'Maximum number of decisions made for a piece of content', 
+                            given=content_id, 
+                            time_taken=(datetime.now()-then).total_seconds())
+            return jsonify({
+                "error": "bad_request", 
+                "message": "Maximum number of decisions (3) made for a piece of content"
+                }), 400
 
     decision = payload.get("decision")
     verdict = payload.get("verdict")
@@ -456,16 +493,16 @@ def decide():
     time_taken = (datetime.now(timezone.utc) - datetime.fromisoformat(appeals[-1].get('timestamp'))).total_seconds()
 
     if not notes:
-        audit.log_appealed_decision(reviewer_id=reviewer_id,
-                                    content_id=content_id, 
+        audit.log_appealed_decision(content_id=content_id, 
                                     appeal_id=appeal_id, 
+                                    reviewer_id=reviewer_id,
                                     verdict=verdict, 
-                                    decision=decision, 
+                                    decision=decision,
                                     time_taken=time_taken,)
     else:
-        audit.log_appealed_decision(reviewer_id=reviewer_id,
-                                    content_id=content_id, 
+        audit.log_appealed_decision(content_id=content_id, 
                                     appeal_id=appeal_id, 
+                                    reviewer_id=reviewer_id,
                                     verdict=verdict, 
                                     decision=decision, 
                                     time_taken=time_taken,
@@ -477,7 +514,7 @@ def decide():
         "appeal_id": appeal_id,
         "verdict": verdict,
         "decision": decision,
-        "confirmation": "Appeal decided.", 
+        "confirmation": f"{count} decisions made. The third decision is final; content decisions cannot be appeal after this.", 
         "time_taken": time_taken
     }), 200
 
